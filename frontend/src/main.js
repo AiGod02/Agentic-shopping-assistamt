@@ -204,6 +204,16 @@ function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
 }
 
+// ── Auth Changed Listener (Clear Chat on Account Switch or Logout) ──
+window.addEventListener('acp_auth_changed', () => {
+    chatMessages.innerHTML = '';
+    if (welcomeCard) {
+        welcomeCard.style.display = '';
+        chatMessages.appendChild(welcomeCard);
+    }
+    chatInput.value = '';
+});
+
 // ── Initialize ───────────────────────────────────────
 initAuthUI();
 ensureAuthToken().finally(() => {

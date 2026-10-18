@@ -9,14 +9,23 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api/agent': {
-        target: 'http://127.0.0.1:8001',
+        target: `http://127.0.0.1:${process.env.VITE_AGENT_PORT || process.env.VITE_BACKEND_PORT || 8000}`,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/agent/, '/api/v1'),
       },
       '/api/merchant': {
-        target: 'http://127.0.0.1:8002',
+        target: `http://127.0.0.1:${process.env.VITE_MERCHANT_PORT || process.env.VITE_BACKEND_PORT || 8000}`,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/merchant/, '/api/v1'),
+      },
+      '/api/payment': {
+        target: `http://127.0.0.1:${process.env.VITE_PAYMENT_PORT || process.env.VITE_BACKEND_PORT || 8000}`,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/payment/, '/api/v1'),
+      },
+      '/api/v1': {
+        target: `http://127.0.0.1:${process.env.VITE_BACKEND_PORT || 8000}`,
+        changeOrigin: true,
       },
     },
   },

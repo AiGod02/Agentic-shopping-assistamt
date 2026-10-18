@@ -79,8 +79,13 @@ export async function ensureAuthToken() {
  * Get or initialize session ID for multi-turn conversational context.
  */
 export function getSessionId() {
+    const SESSION_EXPIRY_MS = 60 * 60 * 1000; // 60 minutes TTL
+    const lastActive = parseInt(localStorage.getItem('agent_session_time') || '0', 10);
+    const now = Date.now();
     let sid = localStorage.getItem('agent_session_id');
-    if (!sid) {
+
+    // Automatically rotate session if missing or inactive for over 1 hour
+    if (!sid || (now - lastActive > SESSION_EXPIRY_MS)) {
         sid = (typeof crypto !== 'undefined' && crypto.randomUUID)
             ? crypto.randomUUID()
             : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -90,6 +95,7 @@ export function getSessionId() {
               });
         localStorage.setItem('agent_session_id', sid);
     }
+    localStorage.setItem('agent_session_time', String(now));
     return sid;
 }
 
@@ -98,6 +104,7 @@ export function getSessionId() {
  */
 export function resetSession() {
     localStorage.removeItem('agent_session_id');
+    localStorage.removeItem('agent_session_time');
     return getSessionId();
 }
 
@@ -187,6 +194,11 @@ export async function processMessage(userMessage) {
         }
 
         const data = await response.json();
+
+        // Synchronize authoritative session_id from server
+        if (data.session_id) {
+            localStorage.setItem('agent_session_id', data.session_id);
+        }
 
         // Extract products from any search tool calls
         let products = [];

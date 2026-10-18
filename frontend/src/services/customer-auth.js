@@ -2,7 +2,7 @@
  * Customer Auth Service — manages customer sign-in, registration, and guest cart claiming.
  */
 
-import { ensureAuthToken } from '../mcp/agent-orchestrator.js';
+import { ensureAuthToken, resetSession } from '../mcp/agent-orchestrator.js';
 import { claimGuestCart, fetchCart } from './cart-api.js';
 
 const MERCHANT_API = '/api/merchant';
@@ -43,6 +43,9 @@ export async function loginCustomer(email, password) {
         localStorage.setItem('acp_user_name', data.full_name || data.business_name || email.split('@')[0]);
         localStorage.setItem('acp_user_email', email);
         localStorage.setItem('acp_is_guest', 'false');
+
+        // Reset chat session so logged-in customer starts with an isolated session
+        resetSession();
 
         // Claim and merge any items added during guest session
         if (oldGuestUserId && oldGuestUserId !== data.user_id) {
@@ -85,6 +88,9 @@ export async function registerCustomer(email, password, fullName, phone = null) 
         localStorage.setItem('acp_user_email', email);
         localStorage.setItem('acp_is_guest', 'false');
 
+        // Reset chat session so newly registered user starts with fresh dialogue state
+        resetSession();
+
         // Claim and merge any items added during guest session
         if (oldGuestUserId && oldGuestUserId !== data.user_id) {
             await claimGuestCart(oldGuestUserId);
@@ -105,6 +111,9 @@ export async function logoutCustomer() {
     localStorage.removeItem('acp_user_name');
     localStorage.removeItem('acp_user_email');
     localStorage.setItem('acp_is_guest', 'true');
+
+    // Reset chat session so guest user never inherits previous authenticated user's session
+    resetSession();
 
     // Re-initialize guest token for seamless shopping continuation
     await ensureAuthToken();
