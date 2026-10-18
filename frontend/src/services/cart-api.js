@@ -130,3 +130,23 @@ export async function removeFromCart(itemId) {
     }
     return cachedCart;
 }
+
+export async function claimGuestCart(oldGuestUserId) {
+    if (!oldGuestUserId) return cachedCart;
+    try {
+        const headers = await getAuthHeaders();
+        const resp = await fetch(`${MERCHANT_API}/cart/claim`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ guest_user_id: oldGuestUserId }),
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            return normalizeCart(data);
+        }
+    } catch (err) {
+        console.error('[CartAPI] Error claiming cart:', err);
+    }
+    return fetchCart();
+}
+

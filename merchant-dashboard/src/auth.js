@@ -135,6 +135,22 @@ export async function login(email, password) {
   return data;
 }
 
+export async function registerMerchant(formData) {
+  const res = await fetch('/api/v1/merchants/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Registration failed');
+  }
+
+  // Automatically log in after registration
+  return login(formData.email, formData.password);
+}
+
 export async function logout() {
   const token = getAccessToken();
   if (token) {

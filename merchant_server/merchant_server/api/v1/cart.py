@@ -277,3 +277,55 @@ async def clear_cart(
         )
     service = CartService(db)
     await service.clear_cart(user_id)
+
+
+class ClaimCartRequest(BaseModel):
+    guest_user_id: str
+
+
+@router.post("/claim", response_model=CartResponse)
+async def claim_cart(
+    body: ClaimCartRequest,
+    request: Request,
+    user=Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Claim/merge guest cart items into the current authenticated user's cart."""
+    user_id = _resolve_user_id(request, user)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required to claim cart")
+
+    guest_id = _parse_uuid(body.guest_user_id)
+    if guest_id == user_id:
+        service = CartService(db)
+        cart = await service.get_cart(user_id)
+        return _cart_to_response(cart) if cart else CartResponse(id="", status="empty", items=[], subtotal=0, item_count=0)
+
+    from merchant_server.domain.repositories.cart_repo import CartRepository
+    repo = CartRepository(db)
+    guest_cart = await repo.get_active_cart(guest_id)
+    if not guest_cart or not guest_cart.items:
+        service = CartService(db)
+        cart = await service.get_cart(user_id)
+        return _cart_to_response(cart) if cart else CartResponse(id="", status="empty", items=[], subtotal=0, item_count=0)
+
+    target_cart = await repo.get_or_create_cart(user_id)
+    for g_item in guest_cart.items:
+        await repo.add_item(
+            cart_id=target_cart.id,
+            listing_id=g_item.listing_id,
+            variant_id=g_item.variant_id,
+            item_type=g_item.item_type,
+            quantity=g_item.quantity,
+            unit_price=float(g_item.unit_price),
+            check_in=g_item.check_in,
+            check_out=g_item.check_out,
+            guests=g_item.guests,
+            metadata=g_item.metadata_,
+        )
+    guest_cart.status = "merged"
+    await db.flush()
+
+    service = CartService(db)
+    updated_cart = await service.get_cart(user_id)
+    return _cart_to_response(updated_cart)

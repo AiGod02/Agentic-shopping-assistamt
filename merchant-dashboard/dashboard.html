@@ -211,9 +211,75 @@
 
         <!-- Products Section -->
         <section class="dash-section" id="section-products" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 class="settings-title" style="margin-bottom: 0;">Product Catalog</h2>
-            <button class="pagination-btn" id="toggle-add-product-btn">➕ Upload Product</button>
+          <div class="products-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 class="settings-title" style="margin-bottom: 0;">Product Catalog</h2>
+                <span class="catalog-count-badge" id="catalog-count-badge">0 items</span>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
+                All items in your catalog. AI Shopping Assistants query these listings in real-time.
+              </p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="pagination-btn" id="open-bulk-upload-btn" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; border: none; font-weight: 600; cursor: pointer;">
+                📤 Bulk Upload Catalog
+              </button>
+              <button class="pagination-btn" id="toggle-add-product-btn">➕ Add Single Product</button>
+            </div>
+          </div>
+
+          <!-- Bulk Upload Catalog Card -->
+          <div class="settings-card bulk-upload-card" id="bulk-upload-card" style="display: none; margin-bottom: 24px; max-width: 100%; border: 1px solid rgba(99, 102, 241, 0.3); background: rgba(20, 20, 50, 0.7);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div>
+                <h3 class="settings-title" style="margin-bottom: 4px;">📤 Bulk Upload Catalog</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0;">
+                  Upload your entire inventory at once using CSV or JSON format (up to 10MB).
+                </p>
+              </div>
+              <button type="button" class="dash-logout-btn" id="close-bulk-upload-x" style="width: auto; padding: 6px 12px;">✕</button>
+            </div>
+
+            <!-- Dropzone -->
+            <div class="bulk-dropzone" id="bulk-dropzone" style="border: 2px dashed rgba(99, 102, 241, 0.4); border-radius: var(--radius-md); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(99, 102, 241, 0.04);">
+              <input type="file" id="bulk-file-input" accept=".csv,.json" style="display: none;" />
+              <div style="font-size: 2.4rem; margin-bottom: 8px;">📁</div>
+              <div id="bulk-dropzone-text" style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                Drag & drop your .csv or .json catalog file here, or click to browse
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                Supported formats: <strong>CSV</strong> (headers: title, type, base_price, currency, description, tags) or <strong>JSON</strong> array of products
+              </div>
+              <div id="bulk-selected-file" style="display: none; margin-top: 12px; padding: 8px 16px; background: rgba(99, 102, 241, 0.15); border-radius: 8px; font-weight: 600; color: #a5b4fc; display: inline-flex; align-items: center; gap: 8px;">
+                <span id="bulk-selected-name">file.csv</span>
+                <span id="bulk-selected-size" style="font-size: 0.8rem; color: var(--text-muted);">(0 KB)</span>
+              </div>
+            </div>
+
+            <!-- Sample templates & actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Need a format?</span>
+                <button type="button" class="pagination-btn" id="download-sample-csv-btn" style="font-size: 0.8rem; padding: 6px 12px;">
+                  📥 Sample CSV
+                </button>
+                <button type="button" class="pagination-btn" id="download-sample-json-btn" style="font-size: 0.8rem; padding: 6px 12px;">
+                  📥 Sample JSON
+                </button>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button type="button" class="login-btn" id="submit-bulk-upload-btn" disabled style="padding: 10px 24px; opacity: 0.5; cursor: not-allowed;">
+                  Upload & Import Catalog
+                </button>
+                <button type="button" class="dash-logout-btn" id="cancel-bulk-upload-btn" style="width: auto;">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <!-- Bulk result message -->
+            <div id="bulk-upload-result" style="display: none; margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 0.9rem;"></div>
           </div>
 
           <!-- Add Product Modal/Card -->
@@ -251,6 +317,30 @@
                 <button type="button" class="dash-logout-btn" id="cancel-add-product-btn" style="width: auto;">Cancel</button>
               </div>
             </form>
+          </div>
+
+          <!-- Catalog Filter & Search Toolbar ("Where are they") -->
+          <div class="catalog-toolbar" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="flex: 1; min-width: 240px; position: relative;">
+              <input type="text" class="form-input" id="catalog-search-input" placeholder="🔍 Search existing catalog by title, tag, or description..." style="padding-left: 14px;" />
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <select class="dash-select" id="catalog-type-filter">
+                <option value="">All Types</option>
+                <option value="product">Physical Product</option>
+                <option value="electronics">Electronics</option>
+                <option value="hotel">Hotel / Booking</option>
+                <option value="rental">Rental Property</option>
+                <option value="service">Service</option>
+              </select>
+              <select class="dash-select" id="catalog-sort-select">
+                <option value="newest">Sort: Newest</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="title-asc">Title: A → Z</option>
+              </select>
+              <button class="pagination-btn" id="catalog-refresh-btn" title="Refresh catalog">🔄 Refresh</button>
+            </div>
           </div>
 
           <div class="products-grid" id="products-grid">

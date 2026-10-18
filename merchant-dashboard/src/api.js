@@ -126,6 +126,28 @@ class ApiClient {
   createListing(data) {
     return this._request('POST', '/listings', data);
   }
+
+  deleteListing(listingId) {
+    return this._request('DELETE', `/listings/${listingId}`);
+  }
+
+  async bulkUploadCatalog(file) {
+    let token = getAccessToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${this.baseUrl}/listings/bulk-upload`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Upload failed with status ${res.status}`);
+    }
+    return res.json();
+  }
 }
 
 export const api = new ApiClient();

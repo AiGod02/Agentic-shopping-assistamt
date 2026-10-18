@@ -68,6 +68,13 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class CustomerRegisterRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=8)
+    full_name: str
+    phone: str | None = None
+
+
 class LoginResponse(BaseSchema):
     access_token: str
     refresh_token: str
@@ -77,6 +84,8 @@ class LoginResponse(BaseSchema):
     merchant_id: str | None
     role: str
     business_name: str | None = None
+    full_name: str | None = None
+
 
 
 # ── Helper ────────────────────────────────────────────────────────
@@ -195,6 +204,47 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
         merchant_id=merchant_id,
         role=user.role,
         business_name=merchant.business_name if merchant else None,
+        full_name=user.full_name,
+    )
+
+
+@router.post("/customer/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
+async def register_customer(body: CustomerRegisterRequest, db: AsyncSession = Depends(get_db)):
+    """Register a new customer account and return JWT session immediately."""
+    from sqlalchemy import select
+
+    # Check existing user
+    existing = await db.execute(select(User).where(User.email == body.email))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Email is already registered. Please sign in.")
+
+    # Create user
+    user = User(
+        email=body.email,
+        password_hash=bcrypt.hash(body.password),
+        full_name=body.full_name,
+        phone=body.phone,
+        role="customer",
+    )
+    db.add(user)
+    await db.flush()
+
+    jwt_handler = _get_jwt_handler()
+    token_pair = jwt_handler.create_token_pair(
+        user_id=str(user.id),
+        role="customer",
+        merchant_id=None,
+    )
+
+    return LoginResponse(
+        access_token=token_pair.access_token,
+        refresh_token=token_pair.refresh_token,
+        token_type=token_pair.token_type,
+        expires_in=token_pair.expires_in,
+        user_id=str(user.id),
+        merchant_id=None,
+        role="customer",
+        full_name=user.full_name,
     )
 
 

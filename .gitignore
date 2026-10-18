@@ -2,6 +2,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
 chroma_data/
 .venv/
 env/
@@ -12,4 +17,7 @@ dist/
 build/
 .coverage
 htmlcov/
+*.log
+.DS_Store
+Thumbs.db
 

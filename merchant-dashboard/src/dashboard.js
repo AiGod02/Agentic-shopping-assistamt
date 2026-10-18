@@ -16,6 +16,13 @@ let salesGranularity = 'day';
 let ordersPage = 1;
 let ordersStatus = '';
 
+// Catalog state
+let cachedListings = [];
+let selectedBulkFile = null;
+let catalogSearchTerm = '';
+let catalogTypeFilter = '';
+let catalogSortBy = 'newest';
+
 // ── DOM References ───────────────────────────────────
 const loading = document.getElementById('dash-loading');
 const sidebar = document.getElementById('dash-sidebar');
@@ -212,6 +219,213 @@ function setupEventListeners() {
       } catch (err) {
         showToast('Failed to create listing: ' + err.message, 'error');
       }
+    });
+  }
+
+  // ── Bulk Upload Catalog Handlers ──
+  const openBulkUploadBtn = document.getElementById('open-bulk-upload-btn');
+  const closeBulkUploadX = document.getElementById('close-bulk-upload-x');
+  const cancelBulkUploadBtn = document.getElementById('cancel-bulk-upload-btn');
+  const bulkUploadCard = document.getElementById('bulk-upload-card');
+  const bulkFileInput = document.getElementById('bulk-file-input');
+  const bulkDropzone = document.getElementById('bulk-dropzone');
+  const submitBulkUploadBtn = document.getElementById('submit-bulk-upload-btn');
+  const bulkSelectedFile = document.getElementById('bulk-selected-file');
+  const bulkSelectedName = document.getElementById('bulk-selected-name');
+  const bulkSelectedSize = document.getElementById('bulk-selected-size');
+  const bulkUploadResult = document.getElementById('bulk-upload-result');
+
+  function resetBulkUploadUI() {
+    selectedBulkFile = null;
+    if (bulkFileInput) bulkFileInput.value = '';
+    if (bulkUploadCard) bulkUploadCard.style.display = 'none';
+    if (bulkSelectedFile) bulkSelectedFile.style.display = 'none';
+    if (submitBulkUploadBtn) {
+      submitBulkUploadBtn.disabled = true;
+      submitBulkUploadBtn.style.opacity = '0.5';
+      submitBulkUploadBtn.style.cursor = 'not-allowed';
+      submitBulkUploadBtn.textContent = 'Upload & Import Catalog';
+    }
+    if (bulkUploadResult) bulkUploadResult.style.display = 'none';
+  }
+
+  if (openBulkUploadBtn && bulkUploadCard) {
+    openBulkUploadBtn.addEventListener('click', () => {
+      const isHidden = bulkUploadCard.style.display === 'none';
+      bulkUploadCard.style.display = isHidden ? 'block' : 'none';
+      if (!isHidden) resetBulkUploadUI();
+    });
+  }
+
+  if (closeBulkUploadX) closeBulkUploadX.addEventListener('click', resetBulkUploadUI);
+  if (cancelBulkUploadBtn) cancelBulkUploadBtn.addEventListener('click', resetBulkUploadUI);
+
+  function handleBulkFileSelected(file) {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.csv') && !name.endsWith('.json')) {
+      showToast('Please select a valid .csv or .json catalog file', 'error');
+      return;
+    }
+    selectedBulkFile = file;
+    if (bulkSelectedName) bulkSelectedName.textContent = file.name;
+    if (bulkSelectedSize) bulkSelectedSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+    if (bulkSelectedFile) bulkSelectedFile.style.display = 'inline-flex';
+    if (submitBulkUploadBtn) {
+      submitBulkUploadBtn.disabled = false;
+      submitBulkUploadBtn.style.opacity = '1';
+      submitBulkUploadBtn.style.cursor = 'pointer';
+    }
+  }
+
+  if (bulkDropzone && bulkFileInput) {
+    bulkDropzone.addEventListener('click', (e) => {
+      if (e.target !== bulkFileInput) bulkFileInput.click();
+    });
+    bulkFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleBulkFileSelected(e.target.files[0]);
+      }
+    });
+
+    bulkDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      bulkDropzone.classList.add('dragover');
+    });
+    bulkDropzone.addEventListener('dragleave', () => {
+      bulkDropzone.classList.remove('dragover');
+    });
+    bulkDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      bulkDropzone.classList.remove('dragover');
+      if (e.dataTransfer?.files?.length) {
+        handleBulkFileSelected(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  // Sample templates downloads
+  const sampleCsvBtn = document.getElementById('download-sample-csv-btn');
+  if (sampleCsvBtn) {
+    sampleCsvBtn.addEventListener('click', () => {
+      const csvContent = [
+        'title,type,base_price,currency,description,tags',
+        '"Aura Wireless Noise Cancelling Headphones",electronics,199.99,USD,"Premium over-ear audio with 40h battery life and ambient mode","wireless,headphones,audio,anc"',
+        '"Ergonomic Mechanical Keyboard",electronics,89.50,USD,"Custom RGB mechanical keyboard with tactile switches","keyboard,ergonomic,office,tech"',
+        '"Organic Bamboo Sheet Set (Queen)",product,59.99,USD,"Silky smooth breathable 100% bamboo viscose sheets","bedding,organic,home,sheets"',
+        '"Oceanfront Deluxe Suite",hotel,240.00,USD,"Panoramic sea view suite with king bed, jacuzzi, and breakfast","hotel,resort,luxury,beach"',
+        '"Downtown High-Rise Studio",rental,1400.00,USD,"Modern furnished loft with floor-to-ceiling city views","rental,apartment,housing"',
+        '"Full-Stack System Architecture Audit",service,150.00,USD,"1-hour direct system design and scalability evaluation","consulting,service,tech"'
+      ].join('\n');
+      downloadFile(csvContent, 'sample_catalog.csv', 'text/csv;charset=utf-8;');
+      showToast('Sample CSV template downloaded!');
+    });
+  }
+
+  const sampleJsonBtn = document.getElementById('download-sample-json-btn');
+  if (sampleJsonBtn) {
+    sampleJsonBtn.addEventListener('click', () => {
+      const jsonContent = JSON.stringify([
+        {
+          title: "Aura Wireless Noise Cancelling Headphones",
+          type: "electronics",
+          base_price: 199.99,
+          currency: "USD",
+          description: "Premium over-ear audio with 40h battery life and ambient mode",
+          tags: ["wireless", "headphones", "audio", "anc"]
+        },
+        {
+          title: "Organic Bamboo Sheet Set (Queen)",
+          type: "product",
+          base_price: 59.99,
+          currency: "USD",
+          description: "Silky smooth breathable 100% bamboo viscose sheets",
+          tags: ["bedding", "organic", "home", "sheets"]
+        },
+        {
+          title: "Oceanfront Deluxe Suite",
+          type: "hotel",
+          base_price: 240.00,
+          currency: "USD",
+          description: "Panoramic sea view suite with king bed, jacuzzi, and breakfast",
+          tags: ["hotel", "resort", "luxury", "beach"]
+        }
+      ], null, 2);
+      downloadFile(jsonContent, 'sample_catalog.json', 'application/json;charset=utf-8;');
+      showToast('Sample JSON template downloaded!');
+    });
+  }
+
+  // Bulk Upload Submit
+  if (submitBulkUploadBtn) {
+    submitBulkUploadBtn.addEventListener('click', async () => {
+      if (!selectedBulkFile) return;
+      try {
+        submitBulkUploadBtn.disabled = true;
+        submitBulkUploadBtn.textContent = 'Uploading & Importing...';
+        const res = await api.bulkUploadCatalog(selectedBulkFile);
+
+        if (bulkUploadResult) {
+          bulkUploadResult.style.display = 'block';
+          bulkUploadResult.style.background = res.failed_count > 0 ? 'rgba(251, 191, 36, 0.1)' : 'rgba(52, 211, 153, 0.1)';
+          bulkUploadResult.style.border = res.failed_count > 0 ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(52, 211, 153, 0.3)';
+          bulkUploadResult.style.color = res.failed_count > 0 ? '#fde68a' : '#a7f3d0';
+          
+          let errText = '';
+          if (res.errors && res.errors.length) {
+            errText = `<br><span style="font-size: 0.8rem; opacity: 0.85;">Errors: ${res.errors.map(e => `Row ${e.row}: ${e.error}`).join(', ')}</span>`;
+          }
+          bulkUploadResult.innerHTML = `<strong>Catalog Import Completed!</strong><br>Imported: ${res.imported_count} listings | Failed: ${res.failed_count}${errText}`;
+        }
+
+        showToast(`Imported ${res.imported_count} catalog items successfully!`);
+        submitBulkUploadBtn.textContent = 'Upload & Import Catalog';
+        await loadProducts();
+      } catch (err) {
+        if (bulkUploadResult) {
+          bulkUploadResult.style.display = 'block';
+          bulkUploadResult.style.background = 'rgba(248, 113, 113, 0.15)';
+          bulkUploadResult.style.border = '1px solid rgba(248, 113, 113, 0.3)';
+          bulkUploadResult.style.color = '#fca5a5';
+          bulkUploadResult.textContent = `Upload failed: ${err.message}`;
+        }
+        showToast('Bulk upload failed: ' + err.message, 'error');
+        submitBulkUploadBtn.disabled = false;
+        submitBulkUploadBtn.textContent = 'Upload & Import Catalog';
+      }
+    });
+  }
+
+  // Catalog Toolbar: Search, Filter, Sort, Refresh
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+  if (catalogSearchInput) {
+    catalogSearchInput.addEventListener('input', (e) => {
+      catalogSearchTerm = e.target.value.toLowerCase().trim();
+      renderFilteredProducts();
+    });
+  }
+
+  const catalogTypeFilterSelect = document.getElementById('catalog-type-filter');
+  if (catalogTypeFilterSelect) {
+    catalogTypeFilterSelect.addEventListener('change', (e) => {
+      catalogTypeFilter = e.target.value;
+      renderFilteredProducts();
+    });
+  }
+
+  const catalogSortSelect = document.getElementById('catalog-sort-select');
+  if (catalogSortSelect) {
+    catalogSortSelect.addEventListener('change', (e) => {
+      catalogSortBy = e.target.value;
+      renderFilteredProducts();
+    });
+  }
+
+  const catalogRefreshBtn = document.getElementById('catalog-refresh-btn');
+  if (catalogRefreshBtn) {
+    catalogRefreshBtn.addEventListener('click', () => {
+      loadProducts();
+      showToast('Catalog refreshed');
     });
   }
 }
@@ -615,37 +829,172 @@ async function loadAnalytics() {
 // ── Products Section ─────────────────────────────────
 async function loadProducts() {
   try {
-    const data = await api.getListings(1, 50);
-    const products = data?.items || [];
-    const grid = document.getElementById('products-grid');
-
-    if (!products.length) {
-      grid.innerHTML = '<div class="empty-state">No products listed yet. Create your first listing!</div>';
-      return;
-    }
-
-    grid.innerHTML = products.map((p) => `
-      <div class="product-list-card">
-        <div class="product-list-icon">${getTypeEmoji(p.type)}</div>
-        <div class="product-list-info">
-          <div class="product-list-name">${p.title}</div>
-          <div class="product-list-meta">
-            <span class="status-badge ${p.status}">${p.status}</span>
-            <span>${p.type}</span>
-          </div>
-        </div>
-        <div class="product-list-price">${formatCurrency(p.base_price)}</div>
-        <div class="product-list-stats">
-          <span>⭐ ${p.rating_avg.toFixed(1)}</span>
-          <span>(${p.rating_count})</span>
-        </div>
-      </div>
-    `).join('');
+    const data = await api.getListings(1, 100);
+    cachedListings = data?.items || [];
+    renderFilteredProducts();
   } catch (err) {
     console.error('Failed to load products:', err);
     const grid = document.getElementById('products-grid');
-    grid.innerHTML = '<div class="empty-state">Failed to load products.</div>';
+    if (grid) grid.innerHTML = '<div class="empty-state">Failed to load product catalog. Please check your connection.</div>';
   }
+}
+
+function renderFilteredProducts() {
+  const grid = document.getElementById('products-grid');
+  const countBadge = document.getElementById('catalog-count-badge');
+  if (!grid) return;
+
+  let filtered = [...cachedListings];
+
+  // Filter by search term
+  if (catalogSearchTerm) {
+    filtered = filtered.filter((p) => {
+      const titleMatch = (p.title || '').toLowerCase().includes(catalogSearchTerm);
+      const descMatch = (p.description || '').toLowerCase().includes(catalogSearchTerm);
+      const tagMatch = Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(catalogSearchTerm));
+      return titleMatch || descMatch || tagMatch;
+    });
+  }
+
+  // Filter by type
+  if (catalogTypeFilter) {
+    filtered = filtered.filter(p => p.type === catalogTypeFilter);
+  }
+
+  // Sort
+  if (catalogSortBy === 'price-asc') {
+    filtered.sort((a, b) => (a.base_price || 0) - (b.base_price || 0));
+  } else if (catalogSortBy === 'price-desc') {
+    filtered.sort((a, b) => (b.base_price || 0) - (a.base_price || 0));
+  } else if (catalogSortBy === 'title-asc') {
+    filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }
+
+  // Update badge
+  if (countBadge) {
+    if (filtered.length === cachedListings.length) {
+      countBadge.textContent = `${cachedListings.length} ${cachedListings.length === 1 ? 'item' : 'items'}`;
+    } else {
+      countBadge.textContent = `${filtered.length} of ${cachedListings.length} items`;
+    }
+  }
+
+  if (!filtered.length) {
+    if (cachedListings.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="padding: 48px 24px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px dashed var(--border-light);">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">📦</div>
+          <h3 style="color: var(--text-primary); margin-bottom: 8px;">No Products in Your Catalog Yet</h3>
+          <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 20px auto;">
+            Get started by bulk uploading a CSV / JSON catalog file or manually adding individual products.
+          </p>
+          <button class="pagination-btn" id="empty-bulk-upload-trigger" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; border: none; font-weight: 600; cursor: pointer;">
+            📤 Bulk Upload Catalog
+          </button>
+        </div>
+      `;
+      const emptyBtn = document.getElementById('empty-bulk-upload-trigger');
+      if (emptyBtn) {
+        emptyBtn.onclick = () => document.getElementById('open-bulk-upload-btn')?.click();
+      }
+    } else {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+          <p>No products match your current search or filter criteria.</p>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p) => {
+    const tagsHtml = (p.tags && p.tags.length)
+      ? p.tags.slice(0, 4).map(t => `<span class="product-tag-pill">#${escapeHtml(t)}</span>`).join('')
+      : '';
+
+    return `
+      <div class="product-list-card" id="listing-card-${p.id}">
+        <div class="product-list-icon">${getTypeEmoji(p.type)}</div>
+        <div class="product-list-info">
+          <div class="product-list-name" title="${escapeHtml(p.title)}">${escapeHtml(p.title)}</div>
+          <div class="product-list-desc">${escapeHtml(p.description || 'No description provided')}</div>
+          <div class="product-list-meta">
+            <span class="status-badge ${p.status || 'active'}">${p.status || 'active'}</span>
+            <span style="text-transform: capitalize; color: var(--text-secondary);">${p.type}</span>
+            <span>⭐ ${(p.rating_avg || 0).toFixed(1)} (${p.rating_count || 0})</span>
+            ${tagsHtml}
+          </div>
+        </div>
+        <div class="product-list-price">
+          ${formatCurrency(p.base_price)}
+          <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">${p.currency || 'USD'}</div>
+        </div>
+        <div class="product-list-actions">
+          <button class="product-action-btn copy-id-btn" data-id="${p.id}" title="Copy Listing ID">
+            📋 ID
+          </button>
+          <button class="product-action-btn delete delete-listing-btn" data-id="${p.id}" data-title="${escapeHtml(p.title)}" title="Delete from catalog">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach delete and copy listeners
+  grid.querySelectorAll('.delete-listing-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const title = btn.dataset.title;
+      if (!confirm(`Are you sure you want to remove "${title}" from your catalog?`)) return;
+
+      try {
+        btn.disabled = true;
+        await api.deleteListing(id);
+        showToast(`"${title}" deleted successfully.`);
+        await loadProducts();
+      } catch (err) {
+        showToast('Failed to delete listing: ' + err.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  grid.querySelectorAll('.copy-id-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      navigator.clipboard.writeText(id)
+        .then(() => showToast('Listing ID copied to clipboard!'))
+        .catch(() => showToast(id));
+    });
+  });
+}
+
+function downloadFile(content, fileName, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ── Settings Section ─────────────────────────────────

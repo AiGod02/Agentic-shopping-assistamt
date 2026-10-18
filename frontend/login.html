@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sign In or Register as a Customer on Agentic Commerce. Save your shopping cart and enjoy seamless AI-powered shopping." />
+  <title>Customer Sign In — Agentic Commerce</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="customer-login-body">
+  <div class="customer-login-container">
+    <!-- Background glow effects -->
+    <div class="auth-bg-glow glow-1"></div>
+    <div class="auth-bg-glow glow-2"></div>
+
+    <!-- Navigation Back Link -->
+    <div class="auth-nav-top">
+      <a href="/" class="auth-back-link">
+        <span>←</span> Back to AI Shopping Assistant
+      </a>
+      <a href="http://localhost:3001" target="_blank" class="auth-merchant-link">
+        Are you a merchant? <strong>Merchant Portal →</strong>
+      </a>
+    </div>
+
+    <div class="customer-auth-wrapper">
+      <!-- Left side: Benefits Showcase -->
+      <div class="auth-benefits-card">
+        <div class="auth-brand-badge">
+          <span class="auth-brand-icon">🤖</span>
+          <span class="auth-brand-name">Agentic Commerce</span>
+        </div>
+        <h1 class="auth-benefits-title">Shop Smarter with Autonomous AI</h1>
+        <p class="auth-benefits-desc">
+          Sign in to save your current shopping cart, access order history, and receive personalized recommendations through natural conversation.
+        </p>
+
+        <div class="auth-feature-list">
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">💾</div>
+            <div>
+              <div class="auth-feature-heading">Save Your Cart Automatically</div>
+              <div class="auth-feature-sub">Any items you added as a guest will be linked directly to your account.</div>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">⚡</div>
+            <div>
+              <div class="auth-feature-heading">1-Click Fast Checkout</div>
+              <div class="auth-feature-sub">Save delivery addresses and checkout securely via Stripe or Razorpay.</div>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">📦</div>
+            <div>
+              <div class="auth-feature-heading">Order History & Tracking</div>
+              <div class="auth-feature-sub">Ask the AI assistant "Where is my order?" anytime for instant real-time status.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-secure-badge">
+          <span>🔒 256-bit encrypted authentication & private tenant isolation</span>
+        </div>
+      </div>
+
+      <!-- Right side: Auth Form Card -->
+      <div class="customer-auth-card" id="customer-auth-card">
+        <div class="customer-auth-header">
+          <div class="auth-avatar-icon">👤</div>
+          <h2 id="auth-heading">Welcome to Agentic Commerce</h2>
+          <p id="auth-subheading">Sign in or create an account to manage your shopping cart</p>
+        </div>
+
+        <!-- Mode Toggle Tabs -->
+        <div class="customer-auth-tabs">
+          <button type="button" class="cust-tab-btn active" id="tab-login">Sign In</button>
+          <button type="button" class="cust-tab-btn" id="tab-register">Create Account</button>
+        </div>
+
+        <!-- Error Message Alert -->
+        <div class="auth-error-box" id="auth-error" style="display: none;">
+          <span class="error-icon">⚠️</span>
+          <span id="auth-error-text">Authentication failed</span>
+        </div>
+
+        <!-- Success Toast -->
+        <div class="auth-success-box" id="auth-success" style="display: none;">
+          <span class="success-icon">✅</span>
+          <span id="auth-success-text">Success! Redirecting...</span>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="login-form" class="auth-flow-form" style="display: flex;">
+          <div class="auth-input-group">
+            <label for="login-email">Email Address</label>
+            <div class="input-with-icon">
+              <span class="field-icon">✉️</span>
+              <input type="email" id="login-email" placeholder="customer@example.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <div class="label-with-aside">
+              <label for="login-password">Password</label>
+              <span class="hint-demo">Demo: password</span>
+            </div>
+            <div class="input-with-icon">
+              <span class="field-icon">🔒</span>
+              <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" class="password-eye-btn" id="toggle-login-pass">👁️</button>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-primary-btn" id="login-submit-btn">
+            <span class="btn-text">Sign In & Continue Shopping</span>
+            <span class="btn-loader" style="display: none;"><span class="spinner"></span> Signing in...</span>
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" class="auth-flow-form" style="display: none;">
+          <div class="auth-input-group">
+            <label for="reg-name">Full Name</label>
+            <div class="input-with-icon">
+              <span class="field-icon">👤</span>
+              <input type="text" id="reg-name" placeholder="John Doe" required autocomplete="name" />
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <label for="reg-email">Email Address</label>
+            <div class="input-with-icon">
+              <span class="field-icon">✉️</span>
+              <input type="email" id="reg-email" placeholder="john@example.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <label for="reg-password">Password (minimum 8 characters)</label>
+            <div class="input-with-icon">
+              <span class="field-icon">🔒</span>
+              <input type="password" id="reg-password" placeholder="Choose a secure password" minlength="8" required autocomplete="new-password" />
+              <button type="button" class="password-eye-btn" id="toggle-reg-pass">👁️</button>
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <label for="reg-phone">Phone Number (optional, for delivery SMS)</label>
+            <div class="input-with-icon">
+              <span class="field-icon">📱</span>
+              <input type="tel" id="reg-phone" placeholder="+1 (555) 234-5678" autocomplete="tel" />
+            </div>
+          </div>
+
+          <button type="submit" class="auth-primary-btn" id="reg-submit-btn">
+            <span class="btn-text">Create Account & Save Cart</span>
+            <span class="btn-loader" style="display: none;"><span class="spinner"></span> Creating account...</span>
+          </button>
+        </form>
+
+        <div class="customer-auth-footer">
+          <p>By signing in, you agree to our Terms of Service & Privacy Policy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/login.js"></script>
+</body>
+</html>

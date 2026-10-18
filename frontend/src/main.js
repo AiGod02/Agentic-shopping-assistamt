@@ -16,9 +16,14 @@ const sidebarToggle = document.getElementById('sidebar-toggle');
 const cartSidebar = document.getElementById('cart-sidebar');
 const newChatBtn = document.getElementById('new-chat-btn');
 const checkoutBtn = document.getElementById('checkout-btn');
+const saveCartBtn = document.getElementById('save-cart-btn');
+const accountBtn = document.getElementById('account-btn');
 const ordersBtn = document.getElementById('orders-btn');
 const helpBtn = document.getElementById('help-btn');
 const quickActions = document.querySelectorAll('.quick-action-btn');
+
+import { initAuthUI, openAuthModal } from './components/auth-modal.js';
+import { isCustomerLoggedIn, logoutCustomer } from './services/customer-auth.js';
 
 let isProcessing = false;
 
@@ -36,21 +41,40 @@ if (newChatBtn) {
     });
 }
 
-chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-    }
-});
+if (accountBtn) {
+    accountBtn.addEventListener('click', () => {
+        if (isCustomerLoggedIn()) {
+            if (confirm('Do you want to sign out of your account?')) {
+                logoutCustomer();
+                renderChat.addAgentMessage(chatMessages, "You have been signed out. You can continue shopping as a guest anytime!");
+            }
+        } else {
+            openAuthModal('login');
+        }
+    });
+}
 
-sendBtn.addEventListener('click', handleSend);
-
-sidebarToggle.addEventListener('click', () => {
-    cartSidebar.classList.toggle('open');
-});
+if (saveCartBtn) {
+    saveCartBtn.addEventListener('click', () => {
+        if (isCustomerLoggedIn()) {
+            renderChat.addAgentMessage(chatMessages, "💾 Your cart is already saved and linked to your customer account!");
+        } else {
+            openAuthModal('register', 'Save Your Cart', () => {
+                renderChat.addAgentMessage(chatMessages, "✅ Cart saved! Your items are now securely stored on your account.");
+            });
+        }
+    });
+}
 
 checkoutBtn.addEventListener('click', () => {
-    sendMessage('Checkout');
+    if (!isCustomerLoggedIn()) {
+        openAuthModal('login', 'Sign in to complete checkout', () => {
+            renderChat.addAgentMessage(chatMessages, "✅ Signed in! Continuing with checkout...");
+            sendMessage('Checkout');
+        });
+    } else {
+        sendMessage('Checkout');
+    }
 });
 
 ordersBtn.addEventListener('click', () => {
@@ -67,6 +91,25 @@ quickActions.forEach((btn) => {
         if (query) sendMessage(query);
     });
 });
+
+if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+}
+
+if (sendBtn) {
+    sendBtn.addEventListener('click', handleSend);
+}
+
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+        cartSidebar.classList.toggle('open');
+    });
+}
 
 // ── Send Message Flow ────────────────────────────────
 
@@ -126,28 +169,12 @@ async function handleSend() {
 
         // Render Sign In CTA if checkout requires account sign-in
         if (result.requiresSignIn) {
-            renderChat.addSignInPrompt(chatMessages, async () => {
-                renderChat.addUserMessage(chatMessages, "🔑 Signing in...");
-                scrollToBottom();
-                try {
-                    const loginRes = await fetch('/api/merchant/merchants/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: 'customer@example.com', password: 'password' }),
-                    });
-                    if (loginRes.ok) {
-                        const loginData = await loginRes.json();
-                        localStorage.setItem('acp_jwt_token', loginData.access_token);
-                        localStorage.setItem('acp_is_guest', 'false');
-                        renderChat.addAgentMessage(chatMessages, "✅ Signed in successfully! Resuming checkout...");
-                        updateCartUI();
-                        sendMessage("Checkout");
-                    } else {
-                        renderChat.addAgentMessage(chatMessages, "Sign in failed. Please check your credentials.");
-                    }
-                } catch (e) {
-                    renderChat.addAgentMessage(chatMessages, `Sign in error: ${e.message}`);
-                }
+            renderChat.addSignInPrompt(chatMessages, () => {
+                openAuthModal('login', 'Sign In to Finalize Order', () => {
+                    renderChat.addAgentMessage(chatMessages, "✅ Signed in! Continuing your checkout now...");
+                    updateCartUI();
+                    sendMessage("Checkout");
+                });
             });
             scrollToBottom();
         }
@@ -178,6 +205,7 @@ function sleep(ms) {
 }
 
 // ── Initialize ───────────────────────────────────────
+initAuthUI();
 ensureAuthToken().finally(() => {
     updateCartUI();
 });

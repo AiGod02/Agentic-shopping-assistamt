@@ -27,6 +27,12 @@
         <p class="login-logo-subtitle">Sign in to manage your store</p>
       </div>
 
+      <!-- Mode Toggle Tabs -->
+      <div style="display: flex; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 4px; margin-bottom: 20px;">
+        <button type="button" id="tab-login" class="login-btn" style="flex: 1; padding: 8px; margin: 0; background: var(--accent-gradient, #6366f1); box-shadow: none;">Sign In</button>
+        <button type="button" id="tab-register" class="dash-logout-btn" style="flex: 1; padding: 8px; margin: 0; border: none; background: transparent; color: var(--text-muted, #a0a0cc); font-size: 0.9rem;">Register Business</button>
+      </div>
+
       <!-- Login Form -->
       <form id="login-form" autocomplete="on">
         <div class="form-group" id="email-group">
@@ -79,9 +85,61 @@
         </button>
       </form>
 
+      <!-- Register Form -->
+      <form id="register-form" style="display: none; flex-direction: column; gap: 14px;" autocomplete="on">
+        <div class="form-group">
+          <label for="reg-biz-name" class="form-label">Business Name</label>
+          <input type="text" id="reg-biz-name" class="form-input" placeholder="e.g. Apex Tech Supply" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg-biz-type" class="form-label">Business Type</label>
+          <select id="reg-biz-type" class="form-input" style="background: rgba(0,0,0,0.4); color: #fff;">
+            <option value="retail">Retail / Physical Goods</option>
+            <option value="hospitality">Hospitality / Hotel Booking</option>
+            <option value="rental">Rental Properties / Equipment</option>
+            <option value="service">Professional Service / Consulting</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-full-name" class="form-label">Owner Full Name</label>
+          <input type="text" id="reg-full-name" class="form-input" placeholder="e.g. Alex Morgan" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email" class="form-label">Email Address</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="owner@company.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password" class="form-label">Password (min 8 characters)</label>
+          <input type="password" id="reg-password" class="form-input" placeholder="••••••••" minlength="8" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg-tax-id" class="form-label">Tax ID / Business Registration (Optional)</label>
+          <input type="text" id="reg-tax-id" class="form-input" placeholder="e.g. US-EIN-123456" />
+        </div>
+
+        <!-- Register Error Message -->
+        <div class="form-error" id="reg-error" style="display: none;">
+          <span class="form-error-icon">⚠</span>
+          <span id="reg-error-text">Registration failed</span>
+        </div>
+
+        <button type="submit" class="login-btn" id="reg-btn">
+          <span id="reg-btn-text">Register & Launch Store</span>
+          <span id="reg-btn-loading" style="display: none;">
+            <span class="spinner"></span>
+            Registering...
+          </span>
+        </button>
+      </form>
+
       <!-- Footer -->
       <div class="login-footer">
-        <p>Don't have an account? <a href="#" id="register-link">Register your business</a></p>
+        <p id="auth-switch-prompt">Don't have an account? <a href="#" id="register-link">Register your business</a></p>
       </div>
     </div>
 
