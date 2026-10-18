@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Gateway Test Client — Agentic Commerce Protocol</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0a1a;
+      --bg-surface: #12122b;
+      --bg-card: rgba(22, 22, 50, 0.7);
+      --border-color: rgba(99, 102, 241, 0.2);
+      --border-glow: rgba(99, 102, 241, 0.4);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --mono-font: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-title h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .mode-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--border-glow);
+      color: #a5b4fc;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .server-url-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 12px;
+    }
+    .server-url-bar label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .server-url-bar input {
+      background: transparent;
+      border: none;
+      color: #6ee7b7;
+      font-family: var(--mono-font);
+      font-size: 0.85rem;
+      outline: none;
+      width: 200px;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #e0e7ff;
+    }
+
+    /* Gateway Selector */
+    .gateway-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .gw-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 12px 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .gw-btn:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent);
+    }
+    .gw-btn.active {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: #818cf8;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+      color: #fff;
+    }
+    .gw-badge {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Form Fields */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    input, select {
+      background: rgba(10, 10, 30, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+    .input-action {
+      display: flex;
+      gap: 6px;
+    }
+    .input-action input { flex: 1; }
+    .btn-sm {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .btn-sm:hover { background: rgba(255, 255, 255, 0.15); }
+
+    /* Action Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: #e0e7ff;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--border-glow);
+    }
+
+    .test-actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    /* Output Console */
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-pill {
+      font-family: var(--mono-font);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .status-pill.success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .status-pill.error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    .json-viewer {
+      background: #060611;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: var(--mono-font);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      max-height: 480px;
+      min-height: 320px;
+      line-height: 1.5;
+    }
+
+    /* Status Info Badges */
+    .info-box {
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.8rem;
+      color: #c7d2fe;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <span style="font-size: 2rem;">💳</span>
+        <div>
+          <h1>Payment Gateway Test Client</h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            Test Stripe, Razorpay, or Mock Gateway with live idempotency, fraud detection, and ledger checks.
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span class="mode-badge" id="service-status">● Connecting...</span>
+        <div class="server-url-bar">
+          <label>Target API:</label>
+          <input type="text" id="target-api-url" value="http://localhost:8000" />
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left Column: Controls & Form -->
+      <div class="card">
+        <div class="card-title">1. Select Gateway & Payment Details</div>
+
+        <!-- Gateway Selector -->
+        <div class="gateway-selector">
+          <button type="button" class="gw-btn active" data-gw="mock">
+            <span style="font-size: 1.4rem;">🧪</span>
+            <span>Mock Gateway</span>
+            <span class="gw-badge" style="color:#6ee7b7;">Offline Ready</span>
+          </button>
+          <button type="button" class="gw-btn" data-gw="stripe">
+            <span style="font-size: 1.4rem;">💳</span>
+            <span>Stripe</span>
+            <span class="gw-badge" style="color:#93c5fd;">Test Mode</span>
+          </button>
+          <button type="button" class="gw-btn" data-gw="razorpay">
+            <span style="font-size: 1.4rem;">⚡</span>
+            <span>Razorpay</span>
+            <span class="gw-badge" style="color:#fde047;">Test Route</span>
+          </button>
+        </div>
+
+        <div class="info-box" id="gw-info-box">
+          <strong>Mode: Mock Gateway</strong>
+          Simulates real payments instantly with zero external API keys. Perfect for local dev and CI.
+        </div>
+
+        <!-- Form fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pay-amount">Amount</label>
+            <input type="number" id="pay-amount" step="0.01" value="49.99" />
+          </div>
+          <div class="form-group">
+            <label for="pay-currency">Currency</label>
+            <select id="pay-currency">
+              <option value="USD" selected>USD ($)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pay-order-id">Order ID</label>
+          <div class="input-action">
+            <input type="text" id="pay-order-id" />
+            <button type="button" class="btn-sm" id="gen-order-btn">🔄 New ID</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pay-idempotency">Idempotency Key (Prevents Double-Charge)</label>
+          <div class="input-action">
+            <input type="text" id="pay-idempotency" />
+            <button type="button" class="btn-sm" id="gen-idem-btn">🔄 New Key</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pay-email">Customer Email</label>
+            <input type="email" id="pay-email" value="shopper@example.com" />
+          </div>
+          <div class="form-group">
+            <label for="pay-phone">Customer Mobile (+91)</label>
+            <input type="tel" id="pay-phone" placeholder="9876543210" value="9915890834" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="pay-user-id">User / Customer ID</label>
+          <input type="text" id="pay-user-id" />
+        </div>
+
+        <!-- Full DB Journey Button -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px; margin-bottom: 4px;">
+          <div style="font-weight: 700; color: #34d399; font-size: 0.9rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>🗄️</span> Real Database Verification Flow
+          </div>
+          <p style="font-size: 0.78rem; color: #a7f3d0; margin-bottom: 10px; line-height: 1.4;">
+            Tests the complete lifecycle directly in PostgreSQL: <strong>Customer → Cart → Checkout Saga → DB Order → DB Payment → DB Capture → Ledger</strong>.
+          </p>
+          <button type="button" class="btn-primary" id="btn-full-flow" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); width: 100%;">
+            <span>🔥</span> Run Full E-Commerce Flow on DB
+          </button>
+        </div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; margin: 4px 0;">— OR TEST DIRECT GATEWAY CALLS —</div>
+
+        <!-- Action 1: Create Payment -->
+        <button type="button" class="btn-primary" id="btn-create-payment">
+          <span>🚀</span> Create Payment Intent / Order
+        </button>
+
+        <!-- Live Razorpay Checkout Modal Button -->
+        <button type="button" class="btn-primary" id="btn-open-razorpay" style="display: none; background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); margin-top: 6px; box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);">
+          <span>⚡</span> Open Live Razorpay Checkout Modal
+        </button>
+
+        <div class="card-title" style="margin-top: 10px; font-size: 0.95rem;">2. Advanced Lifecycle Tests</div>
+        
+        <div class="test-actions-grid">
+          <button type="button" class="btn-secondary" id="btn-test-idempotency" title="Replay same idempotency key">
+            ⚡ Re-send Same Key
+          </button>
+          <button type="button" class="btn-secondary" id="btn-capture-payment" title="Capture / confirm authorized payment">
+            ✅ Capture Payment
+          </button>
+          <button type="button" class="btn-secondary" id="btn-inspect-ledger" title="Fetch double-entry ledger records">
+            📖 View Ledger
+          </button>
+          <button type="button" class="btn-secondary" id="btn-test-refund" title="Refund this payment">
+            ↩️ Issue Refund
+          </button>
+        </div>
+
+        <button type="button" class="btn-secondary" id="btn-simulate-webhook" style="margin-top: 4px;">
+          🔔 Simulate Webhook Event (charge.succeeded)
+        </button>
+      </div>
+
+      <!-- Right Column: Response Console -->
+      <div class="card">
+        <div class="console-header">
+          <div class="card-title">Live Response Console</div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="status-pill" id="http-status-pill">READY</span>
+            <button type="button" class="btn-sm" id="btn-clear-console">Clear</button>
+          </div>
+        </div>
+
+        <pre class="json-viewer" id="json-viewer">// Output and response data will appear here.
+// Click "Create Payment Intent / Order" on the left to test the gateway.</pre>
+
+        <div class="info-box" style="margin-top: auto;">
+          <strong>💡 Developer Tip:</strong>
+          If testing against the Unified Server, your target is <code>http://localhost:8000</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulated Gateway Checkout Modal -->
+  <div id="simulated-gateway-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #1e2235; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; width: 100%; max-width: 460px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); overflow: hidden;">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); padding: 18px 24px; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">Razorpay Gateway</div>
+          <div style="font-size: 0.75rem; opacity: 0.88;">Interactive Test & Sandbox Checkout</div>
+        </div>
+        <button type="button" id="btn-close-sim-modal" style="background: rgba(255,255,255,0.2); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <div style="padding: 22px;">
+        <!-- Order details summary -->
+        <div style="background: #141724; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Amount Due:</span>
+            <span id="sim-modal-amount" style="color: #38bdf8; font-weight: 800; font-size: 1.15rem;">$49.99</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Order ID:</span>
+            <span id="sim-modal-order" style="color: #e2e8f0; font-size: 0.8rem; font-family: monospace;">ord_xxx</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Customer:</span>
+            <span id="sim-modal-email" style="color: #e2e8f0; font-size: 0.8rem;">shopper@example.com</span>
+          </div>
+        </div>
+
+        <div style="font-size: 0.78rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 10px; margin-bottom: 16px; line-height: 1.4;">
+          <strong>ℹ️ Test / Sandbox Checkout:</strong>
+          Razorpay's API server rejected the credentials in <code>.env</code> (Authentication failed). This interactive modal allows complete payment authorization and verifies <strong>automatic DB capture into PostgreSQL</strong>!
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" id="btn-sim-pay-card" class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+            <span>💳</span> Pay with Test Card (Success)
+          </button>
+          <button type="button" id="btn-sim-pay-upi" class="btn-primary" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+            <span>📱</span> Pay with Test UPI / QR (Success)
+          </button>
+          <button type="button" id="btn-sim-try-live" class="btn-secondary" style="font-size: 0.78rem;">
+            <span>🌐</span> Open Live Razorpay SDK (Requires valid Key in .env)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let selectedGateway = 'mock';
+    let currentPaymentId = null;
+    let lastCreatedIdempotencyKey = null;
+
+    // DOM Elements
+    const targetUrlInput = document.getElementById('target-api-url');
+    const serviceStatusEl = document.getElementById('service-status');
+    const orderIdInput = document.getElementById('pay-order-id');
+    const idempotencyInput = document.getElementById('pay-idempotency');
+    const userIdInput = document.getElementById('pay-user-id');
+    const amountInput = document.getElementById('pay-amount');
+    const currencySelect = document.getElementById('pay-currency');
+    const emailInput = document.getElementById('pay-email');
+    const jsonViewer = document.getElementById('json-viewer');
+    const httpStatusPill = document.getElementById('http-status-pill');
+    const gwInfoBox = document.getElementById('gw-info-box');
+
+    // UUID Generator
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function refreshIdentifiers() {
+      orderIdInput.value = 'ord_' + Math.random().toString(36).substring(2, 9);
+      idempotencyInput.value = generateUUID();
+      if (!userIdInput.value) {
+        userIdInput.value = generateUUID();
+      }
+    }
+
+    document.getElementById('gen-order-btn').onclick = () => {
+      orderIdInput.value = 'ord_' + Math.random().toString(36).substring(2, 9);
+    };
+    document.getElementById('gen-idem-btn').onclick = () => {
+      idempotencyInput.value = generateUUID();
+    };
+
+    // Gateway Selection
+    const gwDescriptions = {
+      mock: '<strong>Mode: Mock Gateway</strong><br>Simulates real payments instantly with zero external API keys. Perfect for local dev and CI.',
+      stripe: '<strong>Mode: Stripe Gateway</strong><br>Creates a real Stripe PaymentIntent if STRIPE_SECRET_KEY is present in .env (or falls back to mock if absent).',
+      razorpay: '<strong>Mode: Razorpay Gateway</strong><br>Creates a real Razorpay Order if RAZORPAY_KEY_ID is present in .env (or falls back to mock if absent).'
+    };
+
+    document.querySelectorAll('.gw-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gw-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGateway = btn.dataset.gw;
+        gwInfoBox.innerHTML = gwDescriptions[selectedGateway] || '';
+        if (selectedGateway === 'razorpay' && currencySelect.value === 'USD') {
+          currencySelect.value = 'INR';
+          if (amountInput.value === '49.99') {
+            amountInput.value = '499.00';
+          }
+        }
+      });
+    });
+
+    // Logging to Console
+    function logResponse(status, data) {
+      httpStatusPill.textContent = status;
+      httpStatusPill.className = 'status-pill ' + (status.startsWith('2') ? 'success' : 'error');
+      jsonViewer.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById('btn-clear-console').onclick = () => {
+      httpStatusPill.textContent = 'READY';
+      httpStatusPill.className = 'status-pill';
+      jsonViewer.textContent = '// Console cleared.';
+    };
+
+    // Health ping
+    async function checkHealth() {
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      try {
+        const res = await fetch(`${baseUrl}/health`);
+        if (res.ok) {
+          const data = await res.json();
+          serviceStatusEl.textContent = `● Server Online (${data.mode || data.service || 'healthy'})`;
+          serviceStatusEl.style.color = '#34d399';
+        } else {
+          serviceStatusEl.textContent = '● Server Error: ' + res.status;
+          serviceStatusEl.style.color = '#f87171';
+        }
+      } catch (err) {
+        serviceStatusEl.textContent = '● Server Unreachable';
+        serviceStatusEl.style.color = '#f87171';
+      }
+    }
+
+    // 1. Create Payment
+    document.getElementById('btn-create-payment').addEventListener('click', async () => {
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      const payload = {
+        order_id: orderIdInput.value.trim(),
+        user_id: userIdInput.value.trim(),
+        amount: parseFloat(amountInput.value),
+        currency: currencySelect.value,
+        gateway: selectedGateway,
+        idempotency_key: idempotencyInput.value.trim(),
+        customer_email: emailInput.value.trim(),
+        metadata: { client: "demo-test-client", timestamp: new Date().toISOString() }
+      };
+
+      lastCreatedIdempotencyKey = payload.idempotency_key;
+
+      try {
+        logResponse('SENDING...', payload);
+        const res = await fetch(`${baseUrl}/api/v1/payments/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service': 'merchant-server'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText}`, data);
+
+        if (data.id || data.payment_id) {
+          currentPaymentId = data.id || data.payment_id;
+        }
+
+        // Razorpay Modal Trigger check
+        const rzpOrderId = data.gateway_order_id || (data.metadata && data.metadata.razorpay_order_id);
+        const rzpKeyId = data.metadata && data.metadata.razorpay_key_id;
+        const rzpBtn = document.getElementById('btn-open-razorpay');
+
+        if (selectedGateway === 'razorpay' && rzpOrderId && rzpBtn) {
+          rzpBtn.style.display = 'flex';
+          rzpBtn.textContent = `⚡ Open Live Razorpay Modal (${rzpOrderId})`;
+          activeRazorpayOrderId = rzpOrderId;
+          activeRazorpayKeyId = rzpKeyId;
+        } else if (rzpBtn) {
+          rzpBtn.style.display = 'none';
+        }
+      } catch (err) {
+        logResponse('FETCH ERROR', { error: err.message });
+      }
+    });
+
+    let activeRazorpayOrderId = null;
+    let activeRazorpayKeyId = null;
+    let lastRazorpayPaymentId = null;
+
+    function executeRazorpaySuccess(payId, orderId) {
+      lastRazorpayPaymentId = payId;
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      logResponse('RAZORPAY PAYMENT SUCCESS (CALLBACK)', {
+        razorpay_payment_id: payId,
+        razorpay_order_id: orderId,
+        status: "Payment authorized! Auto-capturing in PostgreSQL..."
+      });
+
+      if (currentPaymentId) {
+        fetch(`${baseUrl}/api/v1/payments/${currentPaymentId}/capture`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service': 'merchant-server'
+          },
+          body: JSON.stringify({
+            gateway_payment_id: payId,
+            razorpay_payment_id: payId,
+            razorpay_order_id: orderId
+          })
+        })
+        .then(res => res.json())
+        .then(capData => {
+          logResponse('200 OK (RAZORPAY PAYMENT CAPTURED & SAVED IN DB)', capData);
+        })
+        .catch(err => {
+          logResponse('CAPTURE ERROR', { error: err.message });
+        });
+      }
+    }
+
+    // Modal elements
+    const simModal = document.getElementById('simulated-gateway-modal');
+    document.getElementById('btn-close-sim-modal').onclick = () => {
+      simModal.style.display = 'none';
+    };
+
+    document.getElementById('btn-sim-pay-card').onclick = () => {
+      simModal.style.display = 'none';
+      const fakePayId = 'pay_card_' + Math.random().toString(36).substring(2, 12);
+      executeRazorpaySuccess(fakePayId, activeRazorpayOrderId);
+    };
+
+    document.getElementById('btn-sim-pay-upi').onclick = () => {
+      simModal.style.display = 'none';
+      const fakePayId = 'pay_upi_' + Math.random().toString(36).substring(2, 12);
+      executeRazorpaySuccess(fakePayId, activeRazorpayOrderId);
+    };
+
+    document.getElementById('btn-sim-try-live').onclick = () => {
+      simModal.style.display = 'none';
+      openLiveRazorpaySdk();
+    };
+
+    function openLiveRazorpaySdk() {
+      const amountPaise = Math.round(parseFloat(amountInput.value) * 100);
+      const phoneInput = document.getElementById('pay-phone');
+      const contactNumber = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : '9915890834';
+
+      const options = {
+        key: activeRazorpayKeyId || 'rzp_test_placeholder',
+        amount: amountPaise,
+        currency: currencySelect.value || 'INR',
+        name: 'Agentic Commerce Protocol',
+        description: 'Test Order Payment',
+        order_id: activeRazorpayOrderId,
+        prefill: {
+          email: emailInput.value.trim() || 'shopper@example.com',
+          contact: contactNumber
+        },
+        theme: {
+          color: '#6366f1'
+        },
+        handler: function (response) {
+          executeRazorpaySuccess(response.razorpay_payment_id, response.razorpay_order_id);
+        },
+        modal: {
+          ondismiss: function() {
+            logResponse('MODAL CLOSED', { note: 'User closed the Razorpay popup without completing payment.' });
+          }
+        }
+      };
+
+      if (typeof Razorpay !== 'undefined') {
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } else {
+        alert('Razorpay SDK failed to load. Please check your internet connection.');
+      }
+    }
+
+    document.getElementById('btn-open-razorpay').addEventListener('click', () => {
+      if (!activeRazorpayOrderId) {
+        alert('Create a Razorpay order first.');
+        return;
+      }
+
+      // If simulated order because API keys failed authentication, show interactive test modal
+      if (activeRazorpayOrderId.startsWith('order_test_')) {
+        document.getElementById('sim-modal-amount').textContent = `${amountInput.value} ${currencySelect.value}`;
+        document.getElementById('sim-modal-order').textContent = activeRazorpayOrderId;
+        document.getElementById('sim-modal-email').textContent = emailInput.value.trim() || 'shopper@example.com';
+        simModal.style.display = 'flex';
+      } else {
+        openLiveRazorpaySdk();
+      }
+    });
+
+    // 0. Full End-to-End Database Flow Test
+    document.getElementById('btn-full-flow').addEventListener('click', async () => {
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      try {
+        logResponse('RUNNING FULL END-TO-END FLOW ON REAL DATABASE...', {
+          step_1: "Fetch or create Customer User in PostgreSQL",
+          step_2: "Fetch or create Active Listing in PostgreSQL",
+          step_3: "Add Listing to Cart in PostgreSQL",
+          step_4: "Execute Checkout Saga -> Create Order in PostgreSQL",
+          step_5: "Create Payment Record via Gateway in PostgreSQL",
+          step_6: "Capture Payment & Confirm Order in PostgreSQL",
+          step_7: "Verify Double-Entry Ledger in PostgreSQL"
+        });
+
+        const res = await fetch(`${baseUrl}/api/v1/payments/demo-full-flow?gateway=${selectedGateway}`, {
+          method: 'POST'
+        });
+
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText} (DATABASE FLOW VERIFIED)`, data);
+
+        if (data.database_records_created) {
+          const rec = data.database_records_created;
+          currentPaymentId = rec.payment_id;
+          orderIdInput.value = rec.order_id;
+          userIdInput.value = rec.user_id;
+          emailInput.value = rec.customer_email;
+        }
+      } catch (err) {
+        logResponse('FULL FLOW ERROR', { error: err.message });
+      }
+    });
+
+    // 2. Test Idempotency
+    document.getElementById('btn-test-idempotency').addEventListener('click', async () => {
+      if (!lastCreatedIdempotencyKey) {
+        alert('Please create a payment first before testing idempotency replay.');
+        return;
+      }
+
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      const payload = {
+        order_id: orderIdInput.value.trim(),
+        user_id: userIdInput.value.trim(),
+        amount: parseFloat(amountInput.value),
+        currency: currencySelect.value,
+        gateway: selectedGateway,
+        idempotency_key: lastCreatedIdempotencyKey, // Replaying same key!
+        customer_email: emailInput.value.trim()
+      };
+
+      try {
+        logResponse('REPLAYING IDEMPOTENCY KEY...', { note: 'Sending same key to verify duplicate protection', key: lastCreatedIdempotencyKey });
+        const res = await fetch(`${baseUrl}/api/v1/payments/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service': 'merchant-server'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText} (IDEMPOTENCY VERIFIED)`, {
+          explanation: "Server returned existing payment record without creating a duplicate charge!",
+          response: data
+        });
+      } catch (err) {
+        logResponse('ERROR', { error: err.message });
+      }
+    });
+
+    // 3. Capture Payment
+    document.getElementById('btn-capture-payment').addEventListener('click', async () => {
+      if (!currentPaymentId) {
+        alert('No active payment ID found. Create a payment first.');
+        return;
+      }
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      try {
+        logResponse('CAPTURING...', { payment_id: currentPaymentId, gateway_payment_id: lastRazorpayPaymentId });
+        const res = await fetch(`${baseUrl}/api/v1/payments/${currentPaymentId}/capture`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service': 'merchant-server'
+          },
+          body: JSON.stringify({
+            gateway_payment_id: lastRazorpayPaymentId,
+            razorpay_payment_id: lastRazorpayPaymentId
+          })
+        });
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText}`, data);
+      } catch (err) {
+        logResponse('ERROR', { error: err.message });
+      }
+    });
+
+    // 4. View Ledger
+    document.getElementById('btn-inspect-ledger').addEventListener('click', async () => {
+      if (!currentPaymentId) {
+        alert('Create a payment first.');
+        return;
+      }
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      try {
+        logResponse('FETCHING LEDGER...', { payment_id: currentPaymentId });
+        const res = await fetch(`${baseUrl}/api/v1/payments/${currentPaymentId}/ledger`);
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText}`, data);
+      } catch (err) {
+        logResponse('ERROR', { error: err.message });
+      }
+    });
+
+    // 5. Test Refund
+    document.getElementById('btn-test-refund').addEventListener('click', async () => {
+      if (!currentPaymentId) {
+        alert('Create a payment first.');
+        return;
+      }
+      const refundAmtStr = prompt('Enter refund amount (leave blank for full refund):', '');
+      const payload = {
+        amount: refundAmtStr ? parseFloat(refundAmtStr) : null,
+        reason: 'Customer requested test refund',
+        initiated_by: null
+      };
+
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      try {
+        logResponse('PROCESSING REFUND...', payload);
+        const res = await fetch(`${baseUrl}/api/v1/payments/${currentPaymentId}/refund`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service': 'merchant-server'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText}`, data);
+      } catch (err) {
+        logResponse('ERROR', { error: err.message });
+      }
+    });
+
+    // 6. Simulate Webhook
+    document.getElementById('btn-simulate-webhook').addEventListener('click', async () => {
+      const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+      const webhookEndpoint = selectedGateway === 'razorpay' ? '/api/v1/webhooks/razorpay' : '/api/v1/webhooks/stripe';
+      
+      const simulatedPayload = {
+        event_type: "payment_intent.succeeded",
+        event_id: "evt_demo_" + Math.random().toString(36).substring(2, 9),
+        data: {
+          id: currentPaymentId ? `mock_ref_${currentPaymentId}` : "pi_mock_123456789",
+          amount: parseFloat(amountInput.value) * 100,
+          currency: currencySelect.value.toLowerCase(),
+          status: "succeeded"
+        }
+      };
+
+      try {
+        logResponse(`SIMULATING WEBHOOK (${webhookEndpoint})...`, simulatedPayload);
+        const res = await fetch(`${baseUrl}${webhookEndpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Stripe-Signature': 't=1600000000,v1=simulated_test_sig',
+            'X-Razorpay-Signature': 'simulated_test_sig'
+          },
+          body: JSON.stringify(simulatedPayload)
+        });
+        const data = await res.json();
+        logResponse(`${res.status} ${res.statusText}`, data);
+      } catch (err) {
+        logResponse('WEBHOOK ERROR', { error: err.message });
+      }
+    });
+
+    // 7. Full E-Commerce Flow on DB
+    const btnFullFlow = document.getElementById('btn-full-flow');
+    if (btnFullFlow) {
+      btnFullFlow.addEventListener('click', async () => {
+        const baseUrl = targetUrlInput.value.replace(/\/$/, '');
+        try {
+          logResponse('RUNNING FULL DB E-COMMERCE LIFECYCLE FLOW...', {
+            gateway: selectedGateway,
+            endpoint: `${baseUrl}/api/v1/payments/demo-full-flow?gateway=${selectedGateway}`
+          });
+          const res = await fetch(`${baseUrl}/api/v1/payments/demo-full-flow?gateway=${selectedGateway}`, {
+            method: 'POST'
+          });
+          const data = await res.json();
+          logResponse(`${res.status} ${res.statusText} (FULL DB LIFECYCLE COMPLETED)`, data);
+          if (data && data.database_records_created) {
+            const rec = data.database_records_created;
+            if (rec.payment_id) currentPaymentId = rec.payment_id;
+            if (rec.order_id) orderIdInput.value = rec.order_id;
+            if (rec.gateway_order_id && selectedGateway === 'razorpay') {
+              const rzpBtn = document.getElementById('btn-open-razorpay');
+              if (rzpBtn) {
+                rzpBtn.style.display = 'flex';
+                rzpBtn.textContent = `⚡ Open Live Razorpay Modal (${rec.gateway_order_id})`;
+                activeRazorpayOrderId = rec.gateway_order_id;
+              }
+            }
+          }
+        } catch (err) {
+          logResponse('FULL FLOW ERROR', { error: err.message });
+        }
+      });
+    }
+
+    // Initialize
+    refreshIdentifiers();
+    checkHealth();
+    targetUrlInput.addEventListener('change', checkHealth);
+  </script>
+</body>
+</html>

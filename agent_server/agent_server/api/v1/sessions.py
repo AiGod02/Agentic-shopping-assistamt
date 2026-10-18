@@ -27,6 +27,7 @@ async def create_session(
 @router.get("/{session_id}")
 async def get_session(
     session_id: str,
+    user=Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get session details including tool history."""
@@ -34,6 +35,10 @@ async def get_session(
     session = await mgr.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    user_id = user.sub if user else None
+    session_owner = session.get("user_id")
+    if session_owner and str(session_owner) != str(user_id):
+        raise HTTPException(status_code=403, detail="Not authorized to access this session")
     return session
 
 

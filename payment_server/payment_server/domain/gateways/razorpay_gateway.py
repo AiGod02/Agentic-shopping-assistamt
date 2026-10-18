@@ -41,10 +41,14 @@ class RazorpayGateway(PaymentGateway):
     """
 
     def __init__(self) -> None:
-        if not settings.razorpay_key_id or not settings.razorpay_key_secret:
+        key_id = (settings.razorpay_key_id or "").strip().strip('"').strip("'")
+        key_secret = (settings.razorpay_key_secret or "").strip().strip('"').strip("'")
+        if not key_id or not key_secret:
             raise ValueError("RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are required")
+        self.key_id = key_id
+        self.key_secret = key_secret
         self.client = razorpay.Client(
-            auth=(settings.razorpay_key_id, settings.razorpay_key_secret)
+            auth=(key_id, key_secret)
         )
 
     def _to_razorpay_amount(self, amount: float, currency: str) -> int:
@@ -100,21 +104,21 @@ class RazorpayGateway(PaymentGateway):
             ]
             logger.info("razorpay_route_configured", connected_account=connected_account, merchant_share=merchant_share)
 
+        loop = asyncio.get_event_loop()
         try:
-            loop = asyncio.get_event_loop()
             rz_order = await loop.run_in_executor(
                 None,
                 lambda: self.client.order.create(data=order_data),
             )
         except Exception as e:
-            logger.warning("razorpay_api_call_failed_using_test_order_fallback", error=str(e))
-            import uuid
-            rz_order = {
-                "id": f"order_test_{uuid.uuid4().hex[:14]}",
-                "status": "created",
-                "amount": rz_amount,
-                "currency": currency.upper()
-            }
+            logger.error(
+                "razorpay_order_create_failed",
+                error=str(e),
+                amount=amount,
+                currency=currency,
+                order_id=order_id,
+            )
+            raise
 
         logger.info(
             "razorpay_order_created",
@@ -129,10 +133,10 @@ class RazorpayGateway(PaymentGateway):
         ).inc()
 
         return PaymentIntentResult(
-            gateway_payment_id="",  # Will be set after client payment
+            gateway_payment_id="",  # In Razorpay, payment_id is generated upon customer checkout
             gateway_order_id=rz_order["id"],
-            client_secret=None,  # Razorpay uses order_id + key_id on client
-            status=rz_order["status"],
+            client_secret=None,
+            status=rz_order.get("status", "created"),
             amount=amount,
             currency=currency,
             metadata={
@@ -146,7 +150,10 @@ class RazorpayGateway(PaymentGateway):
         gateway_payment_id: str,
         amount: float | None = None,
     ) -> CaptureResult:
-        """Capture a Razorpay payment (if not auto-captured)."""
+        """Capture a Razorpay payment (if not auto-captured). Raises on failure."""
+        if not gateway_payment_id:
+            raise ValueError("gateway_payment_id is required to capture payment on Razorpay")
+
         try:
             loop = asyncio.get_event_loop()
             payment = await loop.run_in_executor(
@@ -154,10 +161,10 @@ class RazorpayGateway(PaymentGateway):
                 lambda: self.client.payment.fetch(gateway_payment_id),
             )
 
-            if payment["status"] != "captured":
+            if payment.get("status") != "captured":
                 capture_params = {}
                 if amount is not None:
-                    capture_params["amount"] = self._to_razorpay_amount(amount, payment["currency"])
+                    capture_params["amount"] = self._to_razorpay_amount(amount, payment.get("currency", "INR"))
 
                 payment = await loop.run_in_executor(
                     None,
@@ -168,7 +175,7 @@ class RazorpayGateway(PaymentGateway):
                     ),
                 )
 
-            captured_amount = self._from_razorpay_amount(payment["amount"], payment["currency"])
+            captured_amount = self._from_razorpay_amount(payment["amount"], payment.get("currency", "INR"))
 
             logger.info(
                 "razorpay_payment_captured",
@@ -188,7 +195,7 @@ class RazorpayGateway(PaymentGateway):
             )
 
         except Exception as e:
-            logger.error("razorpay_capture_failed", error=str(e))
+            logger.error("razorpay_capture_failed", error=str(e), gateway_payment_id=gateway_payment_id)
             raise
 
     async def refund_payment(
@@ -196,18 +203,26 @@ class RazorpayGateway(PaymentGateway):
         gateway_payment_id: str,
         amount: float | None = None,
         reason: str | None = None,
+        currency: str = "INR",
     ) -> RefundResult:
-        """Issue a full or partial refund via Razorpay."""
+        """Issue a full or partial refund via Razorpay. Raises on failure."""
+        if not gateway_payment_id:
+            raise ValueError("gateway_payment_id is required to refund payment on Razorpay")
+
         try:
             loop = asyncio.get_event_loop()
+            payment_curr = currency or "INR"
+
+            payment = await loop.run_in_executor(
+                None,
+                lambda: self.client.payment.fetch(gateway_payment_id),
+            )
+            if isinstance(payment, dict) and "currency" in payment:
+                payment_curr = payment["currency"]
 
             refund_data: dict[str, Any] = {}
             if amount is not None:
-                payment = await loop.run_in_executor(
-                    None,
-                    lambda: self.client.payment.fetch(gateway_payment_id),
-                )
-                refund_data["amount"] = self._to_razorpay_amount(amount, payment["currency"])
+                refund_data["amount"] = self._to_razorpay_amount(amount, payment_curr)
 
             if reason:
                 refund_data["notes"] = {"reason": reason}
@@ -217,23 +232,24 @@ class RazorpayGateway(PaymentGateway):
                 lambda: self.client.payment.refund(gateway_payment_id, refund_data),
             )
 
-            refund_amount = self._from_razorpay_amount(refund["amount"], refund["currency"])
+            refund_amount = self._from_razorpay_amount(refund.get("amount", 0), refund.get("currency", payment_curr))
+            refund_status = "completed" if refund.get("status") in ("processed", "succeeded") else refund.get("status", "pending")
 
             logger.info(
-                "razorpay_refund_created",
-                refund_id=refund["id"],
+                "razorpay_refund_processed",
+                refund_id=refund.get("id"),
                 payment_id=gateway_payment_id,
                 amount=refund_amount,
+                status=refund_status,
             )
 
             return RefundResult(
-                gateway_refund_id=refund["id"],
-                status=refund["status"],
+                gateway_refund_id=refund.get("id"),
+                status=refund_status,
                 amount=refund_amount,
             )
-
         except Exception as e:
-            logger.error("razorpay_refund_failed", error=str(e))
+            logger.error("razorpay_refund_failed", error=str(e), gateway_payment_id=gateway_payment_id)
             raise
 
     async def verify_webhook_signature(

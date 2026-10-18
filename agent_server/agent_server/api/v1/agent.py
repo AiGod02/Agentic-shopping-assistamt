@@ -66,16 +66,31 @@ async def chat(
               session_id=body.session_id or "(new)",
               msg_preview=body.message[:60])
 
-    # Create or retrieve session
+    # Create or retrieve session with strict user-isolation
     user_id = user.sub if user else None
+    session = None
     if body.session_id:
-        session = await session_mgr.get_session(body.session_id)
-        if not session:
+        existing = await session_mgr.get_session(body.session_id)
+        if existing:
+            session_owner = existing.get("user_id")
+            # If the session was created by a registered user and requester is not that user (e.g. guest or different user),
+            # isolate sessions so guest never leaks or inherits authenticated chat state.
+            if session_owner and str(session_owner) != str(user_id):
+                logger.info(
+                    "session_isolation_new_session_assigned",
+                    session_id=body.session_id,
+                    owner=session_owner,
+                    requester=user_id,
+                )
+                session = await session_mgr.create_session(user_id=user_id)
+            else:
+                session = existing
+        else:
             session = await session_mgr.create_session(session_id=body.session_id, user_id=user_id)
-        session_id = session["id"]
     else:
         session = await session_mgr.create_session(user_id=user_id)
-        session_id = session["id"]
+
+    session_id = session["id"]
 
     context = session.get("context", {}) or {}
     context_updated = False

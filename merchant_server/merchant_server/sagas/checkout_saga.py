@@ -112,12 +112,14 @@ class CheckoutSaga:
                 {"status": status, "context": context_json, "key": ctx.idempotency_key}
             )
         else:
+            saga_id = uuid.uuid4()
             await self.session.execute(
                 text("""
-                    INSERT INTO saga_instances (user_id, idempotency_key, status, context_data)
-                    VALUES (:user_id, :key, :status, :context)
+                    INSERT INTO saga_instances (id, user_id, idempotency_key, status, context_data)
+                    VALUES (:id, :user_id, :key, :status, :context)
                 """),
                 {
+                    "id": saga_id,
                     "user_id": ctx.user_id,
                     "key": ctx.idempotency_key,
                     "status": status,
@@ -304,6 +306,24 @@ class CheckoutSaga:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Call Payment Server to create a payment intent."""
+        # 1. Direct in-process call if PaymentService is available (e.g. unified server)
+        try:
+            from payment_server.domain.services.payment_service import PaymentService
+            logger.info("payment_intent_in_process_call", order_id=order_id, gateway=gateway)
+            pay_svc = PaymentService(self.session)
+            return await pay_svc.create_payment(
+                order_id=order_id,
+                user_id=user_id,
+                amount=amount,
+                currency=currency,
+                gateway=gateway,
+                idempotency_key=idempotency_key,
+                metadata=metadata or {},
+            )
+        except ImportError:
+            pass
+
+        # 2. HTTP inter-service call fallback for distributed deployments
         async with httpx.AsyncClient(timeout=30.0) as client:
 
             @payment_circuit.protect

@@ -101,16 +101,18 @@ async def razorpay_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
     logger.info("razorpay_webhook_received", event_type=event_type)
 
-    if event_type == "payment.captured":
+    if event_type in ("payment.captured", "payment.authorized", "order.paid"):
         payment_entity = data.get("payment", {}).get("entity", {})
         payment_id = payment_entity.get("id", "")
-        await _update_payment_status(db, payment_id, "captured", "razorpay")
+        order_id = payment_entity.get("order_id", "")
+        await _update_payment_status(db, payment_id, "captured", "razorpay", gateway_order_id=order_id)
 
     elif event_type == "payment.failed":
         payment_entity = data.get("payment", {}).get("entity", {})
         payment_id = payment_entity.get("id", "")
+        order_id = payment_entity.get("order_id", "")
         error_desc = payment_entity.get("error_description", "")
-        await _update_payment_status(db, payment_id, "failed", "razorpay", error_desc)
+        await _update_payment_status(db, payment_id, "failed", "razorpay", failure_reason=error_desc, gateway_order_id=order_id)
 
     elif event_type == "refund.processed":
         refund_entity = data.get("refund", {}).get("entity", {})
@@ -133,21 +135,32 @@ async def _update_payment_status(
     new_status: str,
     gateway: str,
     failure_reason: str | None = None,
+    gateway_order_id: str | None = None,
 ) -> None:
     """Update payment status in the database based on webhook events."""
-    if not gateway_payment_id:
+    if not gateway_payment_id and not gateway_order_id:
         return
 
-    # Enforce pessimistic lock on the target payment row first and fetch order_id
+    # Look up payment by gateway_payment_id or gateway_order_id
     res = await db.execute(
-        text("SELECT id, order_id FROM payments WHERE gateway_payment_id = :gw_id AND gateway = :gateway FOR UPDATE"),
-        {"gw_id": gateway_payment_id, "gateway": gateway}
+        text("""
+            SELECT id, order_id, gateway_payment_id FROM payments 
+            WHERE (gateway_payment_id = :gw_id OR (gateway_order_id = :gw_oid AND :gw_oid != ''))
+              AND gateway = :gateway 
+            FOR UPDATE
+        """),
+        {"gw_id": gateway_payment_id or "", "gw_oid": gateway_order_id or "", "gateway": gateway}
     )
     payment_row = res.fetchone()
-    order_id = payment_row.order_id if payment_row else None
+    if not payment_row:
+        logger.warning("webhook_payment_not_found", gateway_payment_id=gateway_payment_id, gateway_order_id=gateway_order_id, gateway=gateway)
+        return
 
-    params: dict = {"gw_id": gateway_payment_id, "status": new_status, "gateway": gateway}
-    set_clause = "status = :status"
+    pid = payment_row[0]
+    order_id = payment_row[1]
+
+    params: dict = {"id": pid, "gw_id": gateway_payment_id, "status": new_status}
+    set_clause = "status = :status, gateway_payment_id = COALESCE(NULLIF(:gw_id, ''), gateway_payment_id)"
 
     if failure_reason:
         set_clause += ", failure_reason = :reason"
@@ -157,7 +170,7 @@ async def _update_payment_status(
         set_clause += ", captured_at = NOW()"
 
     await db.execute(
-        text(f"UPDATE payments SET {set_clause} WHERE gateway_payment_id = :gw_id AND gateway = :gateway"),
+        text(f"UPDATE payments SET {set_clause} WHERE id = :id"),
         params,
     )
 

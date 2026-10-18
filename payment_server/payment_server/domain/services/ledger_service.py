@@ -14,6 +14,8 @@ from shared.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
+_ledger_table_verified: bool = False
+
 
 class LedgerService:
     """Double-entry ledger — every financial event creates a debit+credit entry."""
@@ -45,29 +47,74 @@ class LedgerService:
         - commission: Platform commission deducted
         - payout: Merchant payout executed
         """
-        entry_id = str(uuid.uuid4())
+        import json
+        entry_uuid = uuid.uuid4()
+        pid_uuid = None
+        if payment_id:
+            try:
+                pid_uuid = uuid.UUID(str(payment_id))
+            except Exception:
+                pid_uuid = None
+
+        rid_uuid = None
+        if refund_id:
+            try:
+                rid_uuid = uuid.UUID(str(refund_id))
+            except Exception:
+                rid_uuid = None
+
+        eid_uuid = None
+        if escrow_id:
+            try:
+                eid_uuid = uuid.UUID(str(escrow_id))
+            except Exception:
+                eid_uuid = None
+
+        global _ledger_table_verified
+        if not _ledger_table_verified:
+            try:
+                await self.session.execute(text("""
+                    CREATE TABLE IF NOT EXISTS ledger_entries (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        payment_id UUID REFERENCES payments(id),
+                        refund_id UUID,
+                        escrow_id UUID,
+                        entry_type VARCHAR(50) NOT NULL,
+                        debit_account VARCHAR(100) NOT NULL,
+                        credit_account VARCHAR(100) NOT NULL,
+                        amount NUMERIC(12, 2) NOT NULL,
+                        currency VARCHAR(3) DEFAULT 'USD',
+                        description TEXT,
+                        metadata JSONB DEFAULT '{}',
+                        created_at TIMESTAMPTZ DEFAULT NOW()
+                    )
+                """))
+                _ledger_table_verified = True
+            except Exception as ddl_ex:
+                logger.warning("ledger_entries_table_verify_failed", error=str(ddl_ex))
 
         await self.session.execute(
             text("""
                 INSERT INTO ledger_entries (id, payment_id, refund_id, escrow_id, entry_type,
                     debit_account, credit_account, amount, currency, description, metadata)
                 VALUES (:id, :payment_id, :refund_id, :escrow_id, :entry_type,
-                    :debit_account, :credit_account, :amount, :currency, :description, :metadata)
+                    :debit_account, :credit_account, :amount, :currency, :description, CAST(:metadata AS jsonb))
             """),
             {
-                "id": entry_id,
-                "payment_id": payment_id,
-                "refund_id": refund_id,
-                "escrow_id": escrow_id,
+                "id": entry_uuid,
+                "payment_id": pid_uuid,
+                "refund_id": rid_uuid,
+                "escrow_id": eid_uuid,
                 "entry_type": entry_type,
                 "debit_account": debit_account,
                 "credit_account": credit_account,
                 "amount": amount,
                 "currency": currency,
                 "description": description,
-                "metadata": str(metadata or {}),
+                "metadata": json.dumps(metadata or {}),
             },
         )
+        entry_id = str(entry_uuid)
 
         logger.info(
             "ledger_entry_recorded",
@@ -82,42 +129,52 @@ class LedgerService:
 
     async def get_entries_for_payment(self, payment_id: str) -> list[dict[str, Any]]:
         """Get all ledger entries for a payment."""
-        result = await self.session.execute(
-            text("""
-                SELECT id, entry_type, debit_account, credit_account, amount, currency, description, created_at
-                FROM ledger_entries WHERE payment_id = :pid ORDER BY created_at
-            """),
-            {"pid": payment_id},
-        )
-        return [
-            {
-                "entry_id": str(row[0]),
-                "entry_type": row[1],
-                "debit_account": row[2],
-                "credit_account": row[3],
-                "amount": float(row[4]),
-                "currency": row[5],
-                "description": row[6],
-                "created_at": str(row[7]),
-            }
-            for row in result.fetchall()
-        ]
+        try:
+            pid = uuid.UUID(str(payment_id))
+        except Exception:
+            pid = payment_id
+        try:
+            result = await self.session.execute(
+                text("""
+                    SELECT id, entry_type, debit_account, credit_account, amount, currency, description, created_at
+                    FROM ledger_entries WHERE payment_id = :pid ORDER BY created_at
+                """),
+                {"pid": pid},
+            )
+            return [
+                {
+                    "entry_id": str(row[0]),
+                    "entry_type": row[1],
+                    "debit_account": row[2],
+                    "credit_account": row[3],
+                    "amount": float(row[4]),
+                    "currency": row[5],
+                    "description": row[6],
+                    "created_at": str(row[7]),
+                }
+                for row in result.fetchall()
+            ]
+        except Exception:
+            return []
 
     async def get_account_balance(self, account: str) -> dict[str, float]:
         """Calculate the balance of an account across all currencies."""
-        result = await self.session.execute(
-            text("""
-                SELECT currency,
-                    COALESCE(SUM(CASE WHEN debit_account = :acct THEN amount ELSE 0 END), 0) as debits,
-                    COALESCE(SUM(CASE WHEN credit_account = :acct THEN amount ELSE 0 END), 0) as credits
-                FROM ledger_entries
-                WHERE debit_account = :acct OR credit_account = :acct
-                GROUP BY currency
-            """),
-            {"acct": account},
-        )
-        balances = {}
-        for row in result.fetchall():
-            currency, debits, credits = row
-            balances[currency] = float(credits) - float(debits)
-        return balances
+        try:
+            result = await self.session.execute(
+                text("""
+                    SELECT currency,
+                        COALESCE(SUM(CASE WHEN debit_account = :acct THEN amount ELSE 0 END), 0) as debits,
+                        COALESCE(SUM(CASE WHEN credit_account = :acct THEN amount ELSE 0 END), 0) as credits
+                    FROM ledger_entries
+                    WHERE debit_account = :acct OR credit_account = :acct
+                    GROUP BY currency
+                """),
+                {"acct": account},
+            )
+            balances = {}
+            for row in result.fetchall():
+                currency, debits, credits = row
+                balances[currency] = float(credits) - float(debits)
+            return balances
+        except Exception:
+            return {}

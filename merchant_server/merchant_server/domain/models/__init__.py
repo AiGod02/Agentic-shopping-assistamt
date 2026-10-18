@@ -17,7 +17,7 @@ from merchant_server.domain.models.outbox import OutboxEvent
 from merchant_server.domain.models.saga import SagaInstance
 from merchant_server.domain.models.user_memory import UserMemory
 from merchant_server.domain.models.session import AgentSession
-from merchant_server.domain.models.payment import Payment, AuditLog
+from merchant_server.domain.models.payment import Payment, AuditLog, Refund, EscrowHold, LedgerEntry
 
 __all__ = [
     "Base",
@@ -41,4 +41,7 @@ __all__ = [
     "AgentSession",
     "Payment",
     "AuditLog",
+    "Refund",
+    "EscrowHold",
+    "LedgerEntry",
 ]

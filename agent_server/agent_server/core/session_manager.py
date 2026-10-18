@@ -38,11 +38,8 @@ class SessionManager:
 
     async def create_session(self, user_id: str | None = None, session_id: str | None = None) -> dict[str, Any]:
         """Create a new agent session."""
-        if session_id:
-            try:
-                session_id = str(uuid.UUID(str(session_id)))
-            except ValueError:
-                session_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(session_id)))
+        if session_id and self._is_valid_uuid(session_id):
+            session_id = str(uuid.UUID(str(session_id)))
         else:
             session_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
@@ -105,24 +102,37 @@ class SessionManager:
         logger.info("session_created", session_id=session_id, user_id=user_id)
         return session_data
 
-    def _is_valid_uuid(self, val: str) -> bool:
+    def _is_valid_uuid(self, val: Any) -> bool:
+        if not val or str(val).strip().lower() in ("undefined", "null", "none", "", "nan"):
+            return False
         try:
             uuid.UUID(str(val))
             return True
-        except ValueError:
+        except (ValueError, AttributeError):
             return False
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session — tries Redis cache first, falls back to DB."""
         if not self._is_valid_uuid(session_id):
-            session_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(session_id)))
+            return None
 
         # Try Redis
         try:
             redis = await get_redis()
             cached = await redis.get(f"{self.REDIS_PREFIX}{session_id}")
             if cached:
-                return json.loads(cached)
+                data = json.loads(cached)
+                exp_str = data.get("expires_at")
+                if exp_str:
+                    try:
+                        exp_dt = datetime.fromisoformat(exp_str)
+                        if exp_dt.tzinfo is None:
+                            exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                        if exp_dt < datetime.now(timezone.utc):
+                            return None
+                    except Exception:
+                        pass
+                return data
         except Exception:
             pass
 
@@ -134,6 +144,24 @@ class SessionManager:
         row = result.fetchone()
         if not row:
             return None
+
+        # Check DB session expiration
+        expires_at_val = row[5]
+        if expires_at_val:
+            exp_dt = None
+            if isinstance(expires_at_val, str):
+                try:
+                    exp_dt = datetime.fromisoformat(expires_at_val)
+                except ValueError:
+                    exp_dt = None
+            else:
+                exp_dt = expires_at_val
+            if exp_dt:
+                if exp_dt.tzinfo is None:
+                    exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                if exp_dt < datetime.now(timezone.utc):
+                    logger.info("session_expired", session_id=session_id)
+                    return None
 
         session_data = {
             "id": str(row[0]),

@@ -96,12 +96,12 @@ def _cart_to_response(cart) -> CartResponse:
 def _parse_uuid(val: str | uuid.UUID | None) -> uuid.UUID:
     if isinstance(val, uuid.UUID):
         return val
-    if not val:
+    if not val or str(val).strip().lower() in ("undefined", "null", "none", "", "nan"):
         return uuid.uuid4()
     try:
         return uuid.UUID(str(val))
     except (ValueError, AttributeError):
-        return uuid.uuid5(uuid.NAMESPACE_DNS, str(val))
+        return uuid.uuid4()
 
 
 def _resolve_user_id(request: Request, user: Any = None) -> uuid.UUID | None:

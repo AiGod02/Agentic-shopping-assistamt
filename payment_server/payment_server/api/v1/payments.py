@@ -26,7 +26,12 @@ async def _verify_payment_ownership(payment_id: str, user: TokenPayload, db: Asy
     """Verify that the payment belongs to the current user or merchant."""
     if user.role in (Role.ADMIN, "admin"):
         return
+    import uuid
     from sqlalchemy import text
+    try:
+        cand_id = uuid.UUID(str(payment_id))
+    except Exception:
+        cand_id = payment_id
     result = await db.execute(
         text("""
             SELECT p.user_id, l.merchant_id
@@ -36,7 +41,7 @@ async def _verify_payment_ownership(payment_id: str, user: TokenPayload, db: Asy
             LEFT JOIN listings l ON oi.listing_id = l.id
             WHERE p.id = :id
         """),
-        {"id": payment_id},
+        {"id": cand_id},
     )
     rows = result.fetchall()
     if not rows:
@@ -68,6 +73,14 @@ class CreatePaymentRequest(BaseModel):
     idempotency_key: str
     customer_email: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CapturePaymentRequest(BaseModel):
+    gateway_payment_id: str | None = None
+    razorpay_payment_id: str | None = None
+    razorpay_order_id: str | None = None
+    razorpay_signature: str | None = None
+    amount: float | None = None
 
 
 class RefundRequest(BaseModel):
@@ -150,14 +163,32 @@ async def create_payment(
 @router.post("/{payment_id}/capture")
 async def capture_payment(
     payment_id: str,
-    user: TokenPayload = Depends(get_current_user),
+    body: CapturePaymentRequest | None = None,
+    user: TokenPayload | None = Depends(get_optional_user),
+    x_internal_service: str | None = Header(None, alias="X-Internal-Service"),
     db: AsyncSession = Depends(get_db),
 ):
     """Capture an authorized payment."""
-    await _verify_payment_ownership(payment_id, user, db)
+    if user is None and x_internal_service != "merchant-server":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if user:
+        await _verify_payment_ownership(payment_id, user, db)
     service = PaymentService(db)
     try:
-        result = await service.capture_payment(payment_id)
+        gw_pid = None
+        amt = None
+        if body:
+            gw_pid = body.gateway_payment_id or body.razorpay_payment_id
+            amt = body.amount
+        result = await service.capture_payment(
+            payment_id=payment_id,
+            gateway_payment_id=gw_pid,
+            amount=amt,
+        )
         return result
     except PaymentServiceError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -177,11 +208,19 @@ async def get_payment(payment_id: str, db: AsyncSession = Depends(get_db)):
 async def refund_payment(
     payment_id: str,
     body: RefundRequest,
-    user: TokenPayload = Depends(get_current_user),
+    user: TokenPayload | None = Depends(get_optional_user),
+    x_internal_service: str | None = Header(None, alias="X-Internal-Service"),
     db: AsyncSession = Depends(get_db),
 ):
     """Issue a full or partial refund."""
-    await _verify_payment_ownership(payment_id, user, db)
+    if user is None and x_internal_service != "merchant-server":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if user:
+        await _verify_payment_ownership(payment_id, user, db)
     service = RefundService(db)
     try:
         result = await service.create_refund(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import and_, func, select, update
+from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -53,6 +53,35 @@ class OrderRepository:
             select(Order)
             .options(selectinload(Order.items))
             .where(Order.order_number == order_number)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_by_id_for_merchant(self, order_id: uuid.UUID, merchant_id: uuid.UUID) -> Order | None:
+        """Fetch an order only if it contains items belonging to this merchant or belongs to merchant user."""
+        from merchant_server.domain.models.listing import Listing
+        from merchant_server.domain.models.merchant import Merchant
+
+        merchant_order_ids = (
+            select(OrderItem.order_id)
+            .join(Listing, OrderItem.listing_id == Listing.id)
+            .where(Listing.merchant_id == merchant_id)
+            .where(OrderItem.order_id == order_id)
+        )
+        merchant_user_id = select(Merchant.user_id).where(Merchant.id == merchant_id)
+
+        stmt = (
+            select(Order)
+            .options(selectinload(Order.items))
+            .where(
+                and_(
+                    Order.id == order_id,
+                    or_(
+                        Order.id.in_(merchant_order_ids),
+                        Order.user_id.in_(merchant_user_id),
+                    ),
+                )
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
