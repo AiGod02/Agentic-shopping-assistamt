@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Merchant Dashboard — Track sales, orders, traffic, and manage your store." />
+  <title>Dashboard — Merchant Portal</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="dashboard-body">
+  <div id="app" class="dashboard-layout">
+
+    <!-- Sidebar Navigation -->
+    <aside class="dash-sidebar" id="dash-sidebar">
+      <div class="dash-sidebar-brand">
+        <div class="dash-sidebar-logo">🏪</div>
+        <div>
+          <div class="dash-sidebar-title">Merchant</div>
+          <div class="dash-sidebar-subtitle" id="sidebar-business-name">Dashboard</div>
+        </div>
+      </div>
+
+      <nav class="dash-nav">
+        <a href="#" class="dash-nav-item active" data-section="overview" id="nav-overview">
+          <span class="dash-nav-icon">📊</span>
+          <span>Overview</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="orders" id="nav-orders">
+          <span class="dash-nav-icon">📦</span>
+          <span>Orders</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="analytics" id="nav-analytics">
+          <span class="dash-nav-icon">📈</span>
+          <span>Analytics</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="products" id="nav-products">
+          <span class="dash-nav-icon">🛍️</span>
+          <span>Products</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="settings" id="nav-settings">
+          <span class="dash-nav-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="dash-sidebar-footer">
+        <button class="dash-logout-btn" id="logout-btn">
+          <span>🚪</span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dash-main">
+      <!-- Header -->
+      <header class="dash-header" id="dash-header">
+        <div class="dash-header-left">
+          <button class="dash-mobile-toggle" id="mobile-toggle">☰</button>
+          <div>
+            <h1 class="dash-header-title" id="page-title">Overview</h1>
+            <p class="dash-header-subtitle" id="page-subtitle">Welcome back! Here's your store performance.</p>
+          </div>
+        </div>
+        <div class="dash-header-right">
+          <div class="dash-period-selector">
+            <select id="period-select" class="dash-select">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">Last year</option>
+            </select>
+          </div>
+          <div class="dash-user-menu" id="user-menu">
+            <div class="dash-user-avatar" id="user-avatar">M</div>
+            <span class="dash-user-name" id="user-name">Merchant</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Sections -->
+      <div class="dash-content" id="dash-content">
+
+        <!-- Loading State -->
+        <div class="dash-loading" id="dash-loading">
+          <div class="dash-loading-spinner"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+
+        <!-- Overview Section -->
+        <section class="dash-section" id="section-overview" style="display: none;">
+          <!-- Onboarding Checklist -->
+          <div class="onboarding-card" id="onboarding-card">
+            <div class="onboarding-header">
+              <div>
+                <h2 class="onboarding-title">🚀 Get Started</h2>
+                <p class="onboarding-subtitle">Complete these steps to set up your store</p>
+              </div>
+              <div class="onboarding-progress">
+                <div class="onboarding-progress-bar">
+                  <div class="onboarding-progress-fill" id="onboarding-progress-fill" style="width: 0%"></div>
+                </div>
+                <span class="onboarding-progress-text" id="onboarding-progress-text">0/4 complete</span>
+              </div>
+            </div>
+            <div class="onboarding-steps" id="onboarding-steps">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid" id="kpi-grid">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-row">
+            <div class="chart-card" id="sales-chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Revenue Overview</h3>
+                <div class="chart-controls">
+                  <button class="chart-granularity-btn active" data-granularity="day">Daily</button>
+                  <button class="chart-granularity-btn" data-granularity="week">Weekly</button>
+                  <button class="chart-granularity-btn" data-granularity="month">Monthly</button>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="sales-chart" width="600" height="280"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card" id="traffic-chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Traffic & Visitors</h3>
+              </div>
+              <div class="chart-body">
+                <canvas id="traffic-chart" width="600" height="280"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Recent Orders + Top Products -->
+          <div class="bottom-row">
+            <div class="table-card" id="recent-orders-card">
+              <div class="table-header">
+                <h3 class="table-title">Recent Orders</h3>
+                <a href="#" class="table-view-all" id="view-all-orders">View All →</a>
+              </div>
+              <div class="table-body" id="recent-orders-body">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <div class="top-products-card" id="top-products-card">
+              <div class="table-header">
+                <h3 class="table-title">Top Products</h3>
+              </div>
+              <div class="top-products-body" id="top-products-body">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section class="dash-section" id="section-orders" style="display: none;">
+          <div class="orders-controls">
+            <div class="orders-filters">
+              <select id="order-status-filter" class="dash-select">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="full-orders-table" id="full-orders-table">
+            <!-- Populated by JS -->
+          </div>
+          <div class="orders-pagination" id="orders-pagination">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section class="dash-section" id="section-analytics" style="display: none;">
+          <div class="analytics-charts-grid">
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <h3 class="chart-title">Sales Trend</h3>
+              </div>
+              <div class="chart-body">
+                <canvas id="analytics-sales-chart" width="900" height="320"></canvas>
+              </div>
+            </div>
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <h3 class="chart-title">Traffic Trend</h3>
+              </div>
+              <div class="chart-body">
+                <canvas id="analytics-traffic-chart" width="900" height="320"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Products Section -->
+        <section class="dash-section" id="section-products" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 class="settings-title" style="margin-bottom: 0;">Product Catalog</h2>
+            <button class="pagination-btn" id="toggle-add-product-btn">➕ Upload Product</button>
+          </div>
+
+          <!-- Add Product Modal/Card -->
+          <div class="settings-card" id="add-product-card" style="display: none; margin-bottom: 24px; max-width: 100%;">
+            <h3 class="settings-title">Upload New Product / Service</h3>
+            <form id="add-product-form">
+              <div class="form-group">
+                <label class="form-label" for="prod-title">Product Title</label>
+                <input type="text" class="form-input" id="prod-title" required placeholder="e.g. Premium Noise Cancelling Headphones" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-type">Listing Type</label>
+                <select class="dash-select form-input" id="prod-type" required>
+                  <option value="product">Physical Product</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="hotel">Hotel/Room Booking</option>
+                  <option value="rental">Rental Properties</option>
+                  <option value="service">Professional Service</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-price">Base Price ($)</label>
+                <input type="number" step="0.01" class="form-input" id="prod-price" required placeholder="99.99" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-desc">Description</label>
+                <textarea class="form-input" id="prod-desc" style="min-height: 100px; padding: 12px;" placeholder="Describe features, specs, terms..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-tags">Tags (comma-separated)</label>
+                <input type="text" class="form-input" id="prod-tags" placeholder="electronics, audio, headphones" />
+              </div>
+              <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <button type="submit" class="login-btn">Submit Listing</button>
+                <button type="button" class="dash-logout-btn" id="cancel-add-product-btn" style="width: auto;">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="products-grid" id="products-grid">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section class="dash-section" id="section-settings" style="display: none;">
+          <div class="settings-card">
+            <h3 class="settings-title">Business Profile</h3>
+            <form id="settings-form">
+              <div class="form-group">
+                <label class="form-label" for="settings-business-name">Business Name</label>
+                <input type="text" class="form-input" id="settings-business-name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settings-business-type">Business Type</label>
+                <select class="dash-select form-input" id="settings-business-type">
+                  <option value="retail">Retail</option>
+                  <option value="hospitality">Hospitality</option>
+                  <option value="rental">Rental</option>
+                  <option value="service">Service</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settings-tax-id">Tax ID</label>
+                <input type="text" class="form-input" id="settings-tax-id" placeholder="Optional" />
+              </div>
+              <div style="margin-top: 24px; margin-bottom: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+                <h4 style="margin: 0 0 16px 0; color: var(--text-muted);">Payout Gateways (Stripe Connect / Razorpay Route)</h4>
+                <div class="form-group">
+                  <label class="form-label" for="settings-stripe-account">Stripe Connected Account ID</label>
+                  <input type="text" class="form-input" id="settings-stripe-account" placeholder="e.g. acct_123xyz" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settings-razorpay-account">Razorpay Merchant ID</label>
+                  <input type="text" class="form-input" id="settings-razorpay-account" placeholder="e.g. acc_456abc" />
+                </div>
+              </div>
+              <div class="form-group" style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                <label class="form-label" style="color: var(--primary-color, #10b981);">Your AI Storefront Link</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-input" id="settings-store-link" readonly style="background: rgba(0,0,0,0.2); cursor: text;" />
+                  <button type="button" class="pagination-btn" id="copy-store-link-btn" style="white-space: nowrap;">📋 Copy Link</button>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 0;">Share this link with your customers or embed it on your website so users shop only your products using the AI Assistant.</p>
+              </div>
+              <button type="submit" class="login-btn" style="margin-top: 16px;">Save Changes</button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/dashboard.js"></script>
+</body>
+</html>

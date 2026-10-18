@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'agent-server'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['agent-server:8001']
+        labels:
+          service: agent-server
+
+  - job_name: 'merchant-server'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['merchant-server:8002']
+        labels:
+          service: merchant-server
+
+  - job_name: 'payment-server'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['payment-server:8003']
+        labels:
+          service: payment-server
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="dashboard-body">
+  <div id="app" class="dashboard-layout">
+
+    <!-- Sidebar -->
+    <aside class="dash-sidebar">
+      <div class="dash-sidebar-brand">
+        <div class="dash-sidebar-logo" style="background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);">🛡️</div>
+        <div>
+          <div class="dash-sidebar-title" style="background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Platform Admin</div>
+          <div class="dash-sidebar-subtitle">Control Center</div>
+        </div>
+      </div>
+
+      <nav class="dash-nav">
+        <a href="#" class="dash-nav-item active" data-section="users">
+          <span class="dash-nav-icon">👤</span>
+          <span>Manage Clients</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="merchants">
+          <span class="dash-nav-icon">🏪</span>
+          <span>Merchants Directory</span>
+        </a>
+        <a href="#" class="dash-nav-item" data-section="billing">
+          <span class="dash-nav-icon">💳</span>
+          <span>Platform Subscriptions</span>
+        </a>
+      </nav>
+
+      <div class="dash-sidebar-footer">
+        <button class="dash-logout-btn" id="logout-btn">
+          <span>🚪</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="dash-main">
+      <header class="dash-header">
+        <div class="dash-header-left">
+          <h1 class="dash-header-title" id="page-title">Manage Clients</h1>
+          <p class="dash-header-subtitle" id="page-subtitle">Enable/disable user accounts across the system.</p>
+        </div>
+        <div class="dash-header-right">
+          <div class="dash-user-menu">
+            <div class="dash-user-avatar" style="background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);">A</div>
+            <span class="dash-user-name">System Administrator</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Loader -->
+        <div class="dash-loading" id="dash-loading" style="display: none;">
+          <div class="dash-loading-spinner"></div>
+          <p>Processing request...</p>
+        </div>
+
+        <!-- Users Section -->
+        <section class="dash-section" id="section-users">
+          <div class="table-card">
+            <div class="table-header">
+              <h3 class="table-title">System Users</h3>
+              <div style="display: flex; gap: 8px;">
+                <select id="user-role-filter" class="dash-select">
+                  <option value="">All Roles</option>
+                  <option value="customer">Customers</option>
+                  <option value="merchant">Merchants</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-body" id="users-table-body">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="orders-pagination" id="users-pagination">
+              <!-- Pagination -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Merchants Section -->
+        <section class="dash-section" id="section-merchants" style="display: none;">
+          <div class="table-card">
+            <div class="table-header">
+              <h3 class="table-title">Merchants Verification Directory</h3>
+            </div>
+            <div class="table-body" id="merchants-table-body">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="orders-pagination" id="merchants-pagination">
+              <!-- Pagination -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Billing Section -->
+        <section class="dash-section" id="section-billing" style="display: none;">
+          <!-- Subscriptions Table -->
+          <div class="table-card">
+            <div class="table-header">
+              <h3 class="table-title">Client Subscription List</h3>
+            </div>
+            <div class="table-body" id="subscriptions-table-body">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="orders-pagination" id="subscriptions-pagination">
+              <!-- Pagination -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/dashboard.js"></script>
+</body>
+</html>

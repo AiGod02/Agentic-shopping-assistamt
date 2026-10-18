@@ -1,0 +1,566 @@
+[
+    {
+        "id": "LST-001",
+        "name": "MacBook Pro 16\" M3 Max",
+        "description": "Apple MacBook Pro with M3 Max chip, 36GB RAM, 1TB SSD. Perfect for developers and creatives.",
+        "price": 3499.00,
+        "currency": "USD",
+        "category": "electronics",
+        "type": "product",
+        "tags": [
+            "laptop",
+            "apple",
+            "macbook",
+            "pro",
+            "m3"
+        ],
+        "image": "💻",
+        "rating": 4.9,
+        "reviews_count": 2847,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-001A",
+                "name": "Space Black / 36GB / 1TB",
+                "price": 3499.00
+            },
+            {
+                "id": "VAR-001B",
+                "name": "Silver / 48GB / 2TB",
+                "price": 3999.00
+            }
+        ],
+        "merchant": "Apple Store Official"
+    },
+    {
+        "id": "LST-002",
+        "name": "Sony WH-1000XM5 Headphones",
+        "description": "Industry-leading noise cancellation, 30-hour battery, premium comfort. Auto NC Optimizer adapts to your environment.",
+        "price": 348.00,
+        "currency": "USD",
+        "category": "electronics",
+        "type": "product",
+        "tags": [
+            "headphones",
+            "sony",
+            "noise-cancelling",
+            "wireless",
+            "bluetooth"
+        ],
+        "image": "🎧",
+        "rating": 4.7,
+        "reviews_count": 15234,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-002A",
+                "name": "Black",
+                "price": 348.00
+            },
+            {
+                "id": "VAR-002B",
+                "name": "Silver",
+                "price": 348.00
+            },
+            {
+                "id": "VAR-002C",
+                "name": "Midnight Blue",
+                "price": 358.00
+            }
+        ],
+        "merchant": "Sony Direct"
+    },
+    {
+        "id": "LST-003",
+        "name": "Samsung Galaxy S24 Ultra",
+        "description": "AI-powered smartphone with 200MP camera, S Pen, titanium frame, Snapdragon 8 Gen 3.",
+        "price": 1299.99,
+        "currency": "USD",
+        "category": "electronics",
+        "type": "product",
+        "tags": [
+            "phone",
+            "samsung",
+            "galaxy",
+            "s24",
+            "ultra",
+            "android"
+        ],
+        "image": "📱",
+        "rating": 4.6,
+        "reviews_count": 8921,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-003A",
+                "name": "Titanium Black / 256GB",
+                "price": 1299.99
+            },
+            {
+                "id": "VAR-003B",
+                "name": "Titanium Gray / 512GB",
+                "price": 1419.99
+            },
+            {
+                "id": "VAR-003C",
+                "name": "Titanium Violet / 1TB",
+                "price": 1659.99
+            }
+        ],
+        "merchant": "Samsung Official"
+    },
+    {
+        "id": "LST-004",
+        "name": "Nike Air Max 97 OG",
+        "description": "The iconic full-length Nike Air unit running shoe with reflective design elements and plush cushioning.",
+        "price": 175.00,
+        "currency": "USD",
+        "category": "fashion",
+        "type": "product",
+        "tags": [
+            "shoes",
+            "nike",
+            "sneakers",
+            "air-max",
+            "running"
+        ],
+        "image": "👟",
+        "rating": 4.5,
+        "reviews_count": 3412,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-004A",
+                "name": "Silver Bullet / US 9",
+                "price": 175.00
+            },
+            {
+                "id": "VAR-004B",
+                "name": "Silver Bullet / US 10",
+                "price": 175.00
+            },
+            {
+                "id": "VAR-004C",
+                "name": "Triple Black / US 10",
+                "price": 175.00
+            }
+        ],
+        "merchant": "Nike Store"
+    },
+    {
+        "id": "LST-005",
+        "name": "Dyson V15 Detect Absolute",
+        "description": "Laser-guided cordless vacuum with LCD screen showing particle counts and 60 minutes of fade-free suction.",
+        "price": 749.99,
+        "currency": "USD",
+        "category": "home",
+        "type": "product",
+        "tags": [
+            "vacuum",
+            "dyson",
+            "cordless",
+            "cleaning",
+            "home"
+        ],
+        "image": "🧹",
+        "rating": 4.8,
+        "reviews_count": 5671,
+        "in_stock": true,
+        "variants": [],
+        "merchant": "Dyson Official"
+    },
+    {
+        "id": "LST-006",
+        "name": "The Ritz-Carlton New York — Deluxe Room",
+        "description": "Luxury suite in Midtown Manhattan with Central Park views, marble bathroom, Frette linens, and 24/7 concierge.",
+        "price": 895.00,
+        "currency": "USD",
+        "category": "hotel",
+        "type": "hotel",
+        "tags": [
+            "hotel",
+            "luxury",
+            "new-york",
+            "manhattan",
+            "5-star"
+        ],
+        "image": "🏨",
+        "rating": 4.9,
+        "reviews_count": 1203,
+        "in_stock": true,
+        "availability": {
+            "check_in_from": "2026-03-05",
+            "check_out_until": "2026-12-31"
+        },
+        "variants": [
+            {
+                "id": "VAR-006A",
+                "name": "Deluxe King Room",
+                "price": 895.00
+            },
+            {
+                "id": "VAR-006B",
+                "name": "Central Park Suite",
+                "price": 1450.00
+            },
+            {
+                "id": "VAR-006C",
+                "name": "Presidential Suite",
+                "price": 3200.00
+            }
+        ],
+        "merchant": "Ritz-Carlton Hotels"
+    },
+    {
+        "id": "LST-007",
+        "name": "Beachfront Villa — Bali",
+        "description": "Private 3-bedroom villa in Seminyak with infinity pool, ocean views, private chef, and daily housekeeping.",
+        "price": 520.00,
+        "currency": "USD",
+        "category": "rental",
+        "type": "rental",
+        "tags": [
+            "villa",
+            "bali",
+            "beach",
+            "vacation",
+            "rental",
+            "luxury"
+        ],
+        "image": "🏖️",
+        "rating": 4.8,
+        "reviews_count": 456,
+        "in_stock": true,
+        "availability": {
+            "check_in_from": "2026-03-10",
+            "check_out_until": "2026-11-30"
+        },
+        "variants": [],
+        "merchant": "Bali Luxury Villas"
+    },
+    {
+        "id": "LST-008",
+        "name": "Premium Yoga Retreat — Rishikesh",
+        "description": "7-day immersive yoga and meditation retreat in the foothills of the Himalayas. Includes meals and Ayurveda sessions.",
+        "price": 1200.00,
+        "currency": "USD",
+        "category": "service",
+        "type": "service",
+        "tags": [
+            "yoga",
+            "retreat",
+            "wellness",
+            "meditation",
+            "india"
+        ],
+        "image": "🧘",
+        "rating": 4.9,
+        "reviews_count": 312,
+        "in_stock": true,
+        "availability": {
+            "check_in_from": "2026-04-01",
+            "check_out_until": "2026-09-30"
+        },
+        "variants": [
+            {
+                "id": "VAR-008A",
+                "name": "Shared Room",
+                "price": 1200.00
+            },
+            {
+                "id": "VAR-008B",
+                "name": "Private Room",
+                "price": 1800.00
+            }
+        ],
+        "merchant": "Himalayan Wellness"
+    },
+    {
+        "id": "LST-009",
+        "name": "LG C4 65\" OLED TV",
+        "description": "4K OLED evo panel with AI-powered α9 Gen7 processor, Dolby Vision, 120Hz gaming mode, webOS 24.",
+        "price": 1796.99,
+        "currency": "USD",
+        "category": "electronics",
+        "type": "product",
+        "tags": [
+            "tv",
+            "oled",
+            "lg",
+            "4k",
+            "gaming",
+            "smart-tv"
+        ],
+        "image": "📺",
+        "rating": 4.7,
+        "reviews_count": 4521,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-009A",
+                "name": "55 inch",
+                "price": 1296.99
+            },
+            {
+                "id": "VAR-009B",
+                "name": "65 inch",
+                "price": 1796.99
+            },
+            {
+                "id": "VAR-009C",
+                "name": "77 inch",
+                "price": 2496.99
+            }
+        ],
+        "merchant": "LG Electronics"
+    },
+    {
+        "id": "LST-010",
+        "name": "Lululemon Define Jacket",
+        "description": "Slim fit Luon fabric jacket with thumbholes and a sleek silhouette — perfect for studio to street.",
+        "price": 128.00,
+        "currency": "USD",
+        "category": "fashion",
+        "type": "product",
+        "tags": [
+            "jacket",
+            "lululemon",
+            "athleisure",
+            "women",
+            "yoga"
+        ],
+        "image": "🧥",
+        "rating": 4.6,
+        "reviews_count": 7890,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-010A",
+                "name": "Black / Size 6",
+                "price": 128.00
+            },
+            {
+                "id": "VAR-010B",
+                "name": "Dark Red / Size 8",
+                "price": 128.00
+            },
+            {
+                "id": "VAR-010C",
+                "name": "Navy / Size 10",
+                "price": 128.00
+            }
+        ],
+        "merchant": "Lululemon"
+    },
+    {
+        "id": "LST-011",
+        "name": "Breville Barista Express Impress",
+        "description": "Semi-automatic espresso machine with intelligent dosing, PID temperature control, and integrated grinder.",
+        "price": 899.95,
+        "currency": "USD",
+        "category": "home",
+        "type": "product",
+        "tags": [
+            "coffee",
+            "espresso",
+            "machine",
+            "breville",
+            "kitchen"
+        ],
+        "image": "☕",
+        "rating": 4.8,
+        "reviews_count": 2134,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-011A",
+                "name": "Brushed Stainless Steel",
+                "price": 899.95
+            },
+            {
+                "id": "VAR-011B",
+                "name": "Black Truffle",
+                "price": 899.95
+            }
+        ],
+        "merchant": "Breville"
+    },
+    {
+        "id": "LST-012",
+        "name": "iPad Pro 13\" M4",
+        "description": "Ultra-thin tablet with OLED display, M4 chip, Apple Pencil Pro support, and all-day battery life.",
+        "price": 1299.00,
+        "currency": "USD",
+        "category": "electronics",
+        "type": "product",
+        "tags": [
+            "tablet",
+            "ipad",
+            "apple",
+            "m4",
+            "drawing"
+        ],
+        "image": "📱",
+        "rating": 4.8,
+        "reviews_count": 3256,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-012A",
+                "name": "256GB WiFi",
+                "price": 1299.00
+            },
+            {
+                "id": "VAR-012B",
+                "name": "512GB WiFi + Cell",
+                "price": 1599.00
+            },
+            {
+                "id": "VAR-012C",
+                "name": "1TB WiFi + Cell",
+                "price": 1999.00
+            }
+        ],
+        "merchant": "Apple Store Official"
+    },
+    {
+        "id": "LST-013",
+        "name": "Grand Hyatt Tokyo — Premier Room",
+        "description": "5-star luxury in Roppongi Hills with Mt. Fuji views, onsen spa, 10 restaurants, and the iconic Maduro lounge.",
+        "price": 650.00,
+        "currency": "USD",
+        "category": "hotel",
+        "type": "hotel",
+        "tags": [
+            "hotel",
+            "tokyo",
+            "japan",
+            "luxury",
+            "5-star"
+        ],
+        "image": "🏯",
+        "rating": 4.8,
+        "reviews_count": 987,
+        "in_stock": true,
+        "availability": {
+            "check_in_from": "2026-03-06",
+            "check_out_until": "2026-12-20"
+        },
+        "variants": [
+            {
+                "id": "VAR-013A",
+                "name": "Grand King Room",
+                "price": 650.00
+            },
+            {
+                "id": "VAR-013B",
+                "name": "Diplomat Suite",
+                "price": 1100.00
+            }
+        ],
+        "merchant": "Grand Hyatt"
+    },
+    {
+        "id": "LST-014",
+        "name": "Patagonia Nano Puff Jacket",
+        "description": "Lightweight, windproof, and water-resistant insulated jacket made with 100% recycled polyester.",
+        "price": 239.00,
+        "currency": "USD",
+        "category": "fashion",
+        "type": "product",
+        "tags": [
+            "jacket",
+            "patagonia",
+            "outdoor",
+            "sustainable",
+            "winter"
+        ],
+        "image": "🧥",
+        "rating": 4.7,
+        "reviews_count": 6543,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-014A",
+                "name": "Black / Men's M",
+                "price": 239.00
+            },
+            {
+                "id": "VAR-014B",
+                "name": "Forge Grey / Men's L",
+                "price": 239.00
+            },
+            {
+                "id": "VAR-014C",
+                "name": "Nouveau Green / Men's XL",
+                "price": 239.00
+            }
+        ],
+        "merchant": "Patagonia"
+    },
+    {
+        "id": "LST-015",
+        "name": "Professional Photography Session",
+        "description": "2-hour on-location portrait photography with 50 edited photos, creative direction, and online gallery.",
+        "price": 350.00,
+        "currency": "USD",
+        "category": "service",
+        "type": "service",
+        "tags": [
+            "photography",
+            "portrait",
+            "professional",
+            "creative"
+        ],
+        "image": "📸",
+        "rating": 4.9,
+        "reviews_count": 278,
+        "in_stock": true,
+        "variants": [
+            {
+                "id": "VAR-015A",
+                "name": "Solo Session",
+                "price": 350.00
+            },
+            {
+                "id": "VAR-015B",
+                "name": "Couple / Family",
+                "price": 500.00
+            }
+        ],
+        "merchant": "Studio Light Photography"
+    },
+    {
+        "id": "LST-016",
+        "name": "Herman Miller Aeron Chair",
+        "description": "Ergonomic office chair with PostureFit SL back support, 8Z Pellicle mesh, and fully adjustable arms.",
+        "price": 1395.00,
+        "currency": "USD",
+        "category": "home",
+        "type": "product",
+        "tags": [
+            "chair",
+            "ergonomic",
+            "office",
+            "herman-miller",
+            "desk"
+        ],
+        "image": "🪑",
+        "rating": 4.8,
+        "reviews_count": 9120,
+        "in_stock": false,
+        "variants": [
+            {
+                "id": "VAR-016A",
+                "name": "Graphite / Size B",
+                "price": 1395.00
+            },
+            {
+                "id": "VAR-016B",
+                "name": "Mineral / Size C",
+                "price": 1395.00
+            }
+        ],
+        "merchant": "Herman Miller"
+    }
+]

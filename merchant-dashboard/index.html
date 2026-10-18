@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Merchant Dashboard — Sign in to manage your store, track sales, and view analytics." />
+  <title>Sign In — Merchant Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="login-body">
+  <div class="login-wrapper" id="login-wrapper">
+    <!-- Floating particles background -->
+    <div class="login-bg">
+      <div class="login-bg-orb login-bg-orb-1"></div>
+      <div class="login-bg-orb login-bg-orb-2"></div>
+      <div class="login-bg-orb login-bg-orb-3"></div>
+    </div>
+
+    <div class="login-card" id="login-card">
+      <!-- Logo -->
+      <div class="login-logo">
+        <div class="login-logo-icon">🏪</div>
+        <h1 class="login-logo-title">Merchant Dashboard</h1>
+        <p class="login-logo-subtitle">Sign in to manage your store</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" autocomplete="on">
+        <div class="form-group" id="email-group">
+          <label for="login-email" class="form-label">Email Address</label>
+          <div class="form-input-wrapper">
+            <span class="form-input-icon">✉</span>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              class="form-input"
+              placeholder="merchant@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group" id="password-group">
+          <label for="login-password" class="form-label">Password</label>
+          <div class="form-input-wrapper">
+            <span class="form-input-icon">🔒</span>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              class="form-input"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              minlength="8"
+            />
+            <button type="button" class="form-toggle-password" id="toggle-password" title="Show password">👁</button>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="form-error" id="login-error" style="display: none;">
+          <span class="form-error-icon">⚠</span>
+          <span id="login-error-text">Invalid credentials</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="login-btn" id="login-btn">
+          <span class="login-btn-text" id="login-btn-text">Sign In</span>
+          <span class="login-btn-loading" id="login-btn-loading" style="display: none;">
+            <span class="spinner"></span>
+            Signing in...
+          </span>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>Don't have an account? <a href="#" id="register-link">Register your business</a></p>
+      </div>
+    </div>
+
+    <!-- Powered by -->
+    <div class="login-powered">
+      Powered by <strong>Agentic Commerce</strong>
+    </div>
+  </div>
+
+  <script type="module" src="/src/login.js"></script>
+</body>
+</html>

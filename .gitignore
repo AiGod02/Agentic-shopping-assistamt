@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+chroma_data/
+.venv/
+env/
+venv/
+node_modules/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+

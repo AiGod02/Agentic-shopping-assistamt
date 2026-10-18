@@ -1,0 +1,64 @@
+# Lightweight Docker Compose — Postgres + Redis + Weaviate (~700MB total)
+# NO transformer models (they're 8GB each). Uses BM25 keyword search instead.
+# For full production stack with vector search, use: docker-compose.yml
+#
+# Usage: docker compose -f docker-compose.light.yml up -d
+
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce_secret
+      POSTGRES_DB: agenticcommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Weaviate — BM25 keyword search only (no vectorizer, ~500MB)
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      CLUSTER_HOSTNAME: node1
+    volumes:
+      - weaviatedata:/var/lib/weaviate
+
+  # Web UI for Postgres
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  weaviatedata:

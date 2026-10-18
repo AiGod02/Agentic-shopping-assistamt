@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Sign In — Platform Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="login-body">
+  <div class="login-wrapper" id="login-wrapper">
+    <div class="login-bg">
+      <div class="login-bg-orb login-bg-orb-1" style="background: rgba(139, 92, 246, 0.15)"></div>
+      <div class="login-bg-orb login-bg-orb-2" style="background: rgba(236, 72, 153, 0.12)"></div>
+    </div>
+
+    <div class="login-card" id="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon">🛡️</div>
+        <h1 class="login-logo-title" style="background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Platform Admin</h1>
+        <p class="login-logo-subtitle">Access controls & client billing</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email" class="form-label">Admin Email</label>
+          <div class="form-input-wrapper">
+            <span class="form-input-icon">✉</span>
+            <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password" class="form-label">Secret Key</label>
+          <div class="form-input-wrapper">
+            <span class="form-input-icon">🔒</span>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
+          </div>
+        </div>
+
+        <div class="form-error" id="login-error" style="display: none;">
+          <span class="form-error-icon">⚠</span>
+          <span id="login-error-text">Unauthorized access</span>
+        </div>
+
+        <button type="submit" class="login-btn" id="login-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);">
+          <span id="login-btn-text">Authenticate</span>
+          <span id="login-btn-loading" style="display: none;"><span class="spinner"></span> Connecting...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/login.js"></script>
+</body>
+</html>

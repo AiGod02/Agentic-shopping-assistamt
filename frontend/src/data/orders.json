@@ -1,0 +1,153 @@
+[
+    {
+        "id": "ORD-001",
+        "status": "delivered",
+        "created_at": "2026-02-20T10:30:00Z",
+        "updated_at": "2026-02-25T14:00:00Z",
+        "items": [
+            {
+                "listing_id": "LST-002",
+                "name": "Sony WH-1000XM5 Headphones",
+                "variant": "Black",
+                "quantity": 1,
+                "price": 348.00
+            }
+        ],
+        "subtotal": 348.00,
+        "tax": 31.32,
+        "total": 379.32,
+        "payment_method": "stripe",
+        "payment_status": "captured",
+        "shipping_address": "123 Main St, San Francisco, CA 94102",
+        "tracking_number": "1Z999AA10123456784",
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-02-20T10:30:00Z"
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-02-20T10:31:00Z"
+            },
+            {
+                "status": "shipped",
+                "timestamp": "2026-02-22T09:00:00Z"
+            },
+            {
+                "status": "delivered",
+                "timestamp": "2026-02-25T14:00:00Z"
+            }
+        ]
+    },
+    {
+        "id": "ORD-002",
+        "status": "shipped",
+        "created_at": "2026-03-01T15:20:00Z",
+        "updated_at": "2026-03-03T08:45:00Z",
+        "items": [
+            {
+                "listing_id": "LST-004",
+                "name": "Nike Air Max 97 OG",
+                "variant": "Silver Bullet / US 10",
+                "quantity": 1,
+                "price": 175.00
+            },
+            {
+                "listing_id": "LST-010",
+                "name": "Lululemon Define Jacket",
+                "variant": "Black / Size 6",
+                "quantity": 1,
+                "price": 128.00
+            }
+        ],
+        "subtotal": 303.00,
+        "tax": 27.27,
+        "total": 330.27,
+        "payment_method": "stripe",
+        "payment_status": "captured",
+        "shipping_address": "456 Oak Ave, Austin, TX 78701",
+        "tracking_number": "1Z999AA10987654321",
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-03-01T15:20:00Z"
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-03-01T15:21:00Z"
+            },
+            {
+                "status": "shipped",
+                "timestamp": "2026-03-03T08:45:00Z"
+            }
+        ]
+    },
+    {
+        "id": "ORD-003",
+        "status": "confirmed",
+        "created_at": "2026-03-04T09:00:00Z",
+        "updated_at": "2026-03-04T09:01:00Z",
+        "items": [
+            {
+                "listing_id": "LST-001",
+                "name": "MacBook Pro 16\" M3 Max",
+                "variant": "Space Black / 36GB / 1TB",
+                "quantity": 1,
+                "price": 3499.00
+            }
+        ],
+        "subtotal": 3499.00,
+        "tax": 314.91,
+        "total": 3813.91,
+        "payment_method": "stripe",
+        "payment_status": "captured",
+        "shipping_address": "789 Pine Ln, Seattle, WA 98101",
+        "tracking_number": null,
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-03-04T09:00:00Z"
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-03-04T09:01:00Z"
+            }
+        ]
+    },
+    {
+        "id": "ORD-004",
+        "status": "cancelled",
+        "created_at": "2026-02-15T12:00:00Z",
+        "updated_at": "2026-02-15T14:30:00Z",
+        "items": [
+            {
+                "listing_id": "LST-009",
+                "name": "LG C4 65\" OLED TV",
+                "variant": "65 inch",
+                "quantity": 1,
+                "price": 1796.99
+            }
+        ],
+        "subtotal": 1796.99,
+        "tax": 161.73,
+        "total": 1958.72,
+        "payment_method": "razorpay",
+        "payment_status": "refunded",
+        "shipping_address": "321 Elm St, Chicago, IL 60601",
+        "tracking_number": null,
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-02-15T12:00:00Z"
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-02-15T12:01:00Z"
+            },
+            {
+                "status": "cancelled",
+                "timestamp": "2026-02-15T14:30:00Z"
+            }
+        ]
+    }
+]
