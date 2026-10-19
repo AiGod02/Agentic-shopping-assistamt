@@ -36,6 +36,7 @@ class ChatResponse(BaseModel):
     session_id: str
     response: str
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    payment: dict[str, Any] | None = None
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -172,6 +173,7 @@ async def chat(
         session_id=result["session_id"],
         response=result["response"],
         tool_calls=result.get("tool_calls", []),
+        payment=result.get("payment"),
     )
 
 

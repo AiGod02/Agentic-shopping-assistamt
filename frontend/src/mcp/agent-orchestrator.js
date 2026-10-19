@@ -164,7 +164,7 @@ export async function processMessage(userMessage) {
 
     // Check for guest checkout attempt
     const isGuest = localStorage.getItem('acp_is_guest') === 'true';
-    const isCheckoutQuery = /^(?:checkout|pay|place\s+order|buy\s+now|complete\s+order)$/i.test(userMessage.trim());
+    const isCheckoutQuery = /^(?:checkout|pay|place\s+order|buy\s+now|complete\s+order|proceed\s+to\s+checkout.*|checkout\s+.*)/i.test(userMessage.trim());
 
     if (isCheckoutQuery && isGuest) {
         return {
@@ -207,10 +207,20 @@ export async function processMessage(userMessage) {
             products = searchCall.result.results.map(mapListingToProduct);
         }
 
+        // Extract payment object from response or checkout tool call
+        let payment = data.payment || null;
+        if (!payment) {
+            const checkoutCall = (data.tool_calls || []).find((tc) => tc.tool === 'checkout' && tc.success !== false);
+            if (checkoutCall && checkoutCall.result && (checkoutCall.result.order_id || checkoutCall.result.payment_id)) {
+                payment = checkoutCall.result;
+            }
+        }
+
         // Format tool calls for Scira-style ToolInvocation rendering
         const toolCalls = (data.tool_calls || []).map((tc) => ({
             tool: tc.tool,
             params: tc.args || tc.params || {},
+            result: tc.result || {},
             status: tc.success !== false ? 'completed' : 'error',
         }));
 
@@ -226,7 +236,8 @@ export async function processMessage(userMessage) {
             text: data.response,
             toolCalls: toolCalls,
             products: products,
-            type: hasCartCall ? 'cart_update' : searchCall ? 'search' : 'chat',
+            payment: payment,
+            type: payment ? 'checkout' : hasCartCall ? 'cart_update' : searchCall ? 'search' : 'chat',
         };
     } catch (err) {
         console.error('[Agent Orchestrator] Agent request failed:', err);

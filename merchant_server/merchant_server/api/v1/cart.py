@@ -40,7 +40,7 @@ class UpdateQuantityRequest(BaseModel):
 
 class CheckoutRequest(BaseModel):
     idempotency_key: str
-    payment_gateway: str = "stripe"
+    payment_gateway: str = "razorpay"
     shipping_address: dict[str, Any] | None = None
     billing_address: dict[str, Any] | None = None
     pay_platform: bool = False

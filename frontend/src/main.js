@@ -70,10 +70,10 @@ checkoutBtn.addEventListener('click', () => {
     if (!isCustomerLoggedIn()) {
         openAuthModal('login', 'Sign in to complete checkout', () => {
             renderChat.addAgentMessage(chatMessages, "✅ Signed in! Continuing with checkout...");
-            sendMessage('Checkout');
+            sendMessage('Checkout with Razorpay');
         });
     } else {
-        sendMessage('Checkout');
+        sendMessage('Checkout with Razorpay');
     }
 });
 
@@ -173,8 +173,24 @@ async function handleSend() {
                 openAuthModal('login', 'Sign In to Finalize Order', () => {
                     renderChat.addAgentMessage(chatMessages, "✅ Signed in! Continuing your checkout now...");
                     updateCartUI();
-                    sendMessage("Checkout");
+                    sendMessage("Checkout with Razorpay");
                 });
+            });
+            scrollToBottom();
+        }
+
+        // Render In-Chat Razorpay Payment Card if checkout or payment pending
+        if (result.payment) {
+            renderChat.addInChatPaymentCard(chatMessages, result.payment, {
+                onPaymentSuccess: async (details) => {
+                    renderChat.addAgentMessage(chatMessages, `🎉 **Payment Confirmed!**\n\nYour payment of **$${Number(result.payment.total_amount).toFixed(2)}** via **Razorpay** (Transaction: \`${details.gateway_payment_id || details.razorpay_payment_id}\`) has been successfully verified and saved to PostgreSQL. Your order **${result.payment.order_number || result.payment.order_id}** is now confirmed and marked as **PAID**.`);
+                    await updateCartUI();
+                    scrollToBottom();
+                },
+                onPaymentError: (err) => {
+                    renderChat.addAgentMessage(chatMessages, `❌ **Payment failed**: ${err.message || 'Payment could not be processed'}. Please try again or choose another payment method.`);
+                    scrollToBottom();
+                }
             });
             scrollToBottom();
         }

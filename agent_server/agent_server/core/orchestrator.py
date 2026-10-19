@@ -298,7 +298,7 @@ class AgentOrchestrator:
                             dialogue_state.focused_listing_id = tool_result["id"]
                             dialogue_state.focused_listing_data = tool_result
 
-                    executed_tool_calls.append({"tool": tc.name, "args": tc.arguments, "success": success})
+                    executed_tool_calls.append({"tool": tc.name, "args": tc.arguments, "success": success, "result": tool_result})
 
                     messages.append(
                         LLMMessage(
@@ -331,9 +331,31 @@ class AgentOrchestrator:
             final_text = "I'm here to help you find the best products, check reviews, and answer any questions! How can I assist you today?"
 
         await self.session_manager.update_dialogue_state(session_id, dialogue_state)
+
+        # Extract payment payload if checkout tool was executed
+        payment_payload = None
+        for tc_item in executed_tool_calls:
+            if tc_item.get("tool") == "checkout" and tc_item.get("success"):
+                tres = tc_item.get("result") or {}
+                if isinstance(tres, dict) and (tres.get("order_id") or tres.get("id")):
+                    payment_payload = {
+                        "order_id": tres.get("order_id") or tres.get("id"),
+                        "order_number": tres.get("order_number"),
+                        "total_amount": tres.get("total_amount") or tres.get("amount"),
+                        "currency": tres.get("currency", "USD"),
+                        "gateway": tres.get("gateway", "razorpay"),
+                        "payment_id": tres.get("payment_id"),
+                        "gateway_order_id": tres.get("gateway_order_id") or tres.get("razorpay_order_id"),
+                        "razorpay_order_id": tres.get("razorpay_order_id") or tres.get("gateway_order_id"),
+                        "razorpay_key_id": tres.get("razorpay_key_id") or getattr(settings, "razorpay_key_id", ""),
+                        "status": tres.get("status", "payment_pending"),
+                    }
+                    break
+
         return {
             "response": final_text,
             "tool_calls": executed_tool_calls,
+            "payment": payment_payload,
             "session_id": session_id,
         }
 
@@ -363,11 +385,14 @@ class AgentOrchestrator:
 
         system = (
             "You are a warm, helpful shopping assistant. A transactional action just completed. "
-            "Write a natural, concise confirmation (2-4 sentences) using the RESULT DATA below.\n"
+            "Write a natural, concise confirmation (2-3 sentences) using the RESULT DATA below.\n"
             "RULES:\n"
             "- Quote prices, order IDs, item names, and totals EXACTLY from the result data\n"
+            "- If the action is checkout with Razorpay, confirm the order number and total amount, "
+            "and instruct the user that they can enter their payment details or click 'Pay with Razorpay' "
+            "directly in the payment card right below in this chat to complete their purchase.\n"
+            "- NEVER mention Stripe or receiving an external payment link when the gateway is Razorpay.\n"
             "- If the action failed, acknowledge the error honestly and suggest a next step\n"
-            "- End with a brief, natural suggestion for what the customer might want to do next\n"
             "- Vary your language — don't use the same opening or closing every time\n"
             "- You may use markdown formatting (bold, bullet points) for readability\n"
         )
@@ -388,6 +413,10 @@ class AgentOrchestrator:
 
         # Fallback: simple template if LLM formatting fails
         if tool_success:
+            if tool_name == "checkout":
+                ord_num = tool_result.get("order_number") or tool_result.get("order_id") or "order"
+                amt = float(tool_result.get("total_amount") or 0)
+                return f"Your order #{ord_num} for ${amt:,.2f} has been created! Please enter your payment details or click 'Pay with Razorpay' in the checkout card below to complete your payment."
             return f"Done! Your {action_desc} was completed successfully. What would you like to do next?"
         else:
             return f"I ran into an issue with {action_desc}: {error_msg}. Would you like to try again?"
@@ -552,31 +581,54 @@ class AgentOrchestrator:
                         }
 
                     tool_def = tool_registry.get("checkout")
-                    gw = "razorpay" if "razorpay" in user_message.lower() else "stripe"
+                    gw = "stripe" if "stripe" in user_message.lower() else "razorpay"
                     res = (
                         await tool_def.handler(payment_gateway=gw, user_token=user_token)
                         if (tool_def and tool_def.handler)
                         else {}
                     )
 
+                    tool_result = {
+                        "order_id": res.get("order_id") or res.get("id"),
+                        "order_number": res.get("order_number"),
+                        "total_amount": res.get("total_amount") or res.get("amount") or cart_info.get("subtotal", 0),
+                        "currency": res.get("currency", "USD"),
+                        "gateway": gw,
+                        "payment_id": res.get("payment_id"),
+                        "gateway_order_id": res.get("gateway_order_id") or res.get("razorpay_order_id"),
+                        "razorpay_order_id": res.get("razorpay_order_id") or res.get("gateway_order_id"),
+                        "razorpay_key_id": res.get("razorpay_key_id") or getattr(settings, "razorpay_key_id", ""),
+                        "status": "payment_pending",
+                        "items_count": len(items),
+                        **(res if isinstance(res, dict) else {}),
+                    }
+
                     resp_text = await self._format_transactional_response(
                         tool_name="checkout",
-                        tool_result={
-                            "order_id": res.get("order_id") or res.get("id"),
-                            "total_amount": res.get("total_amount") or res.get("amount") or cart_info.get("subtotal", 0),
-                            "gateway": gw,
-                            "status": "pending_payment",
-                            "items_count": len(items),
-                            **(res if isinstance(res, dict) else {}),
-                        },
+                        tool_result=tool_result,
                         tool_success=True,
                         error_msg="",
                         user_message=user_message,
                         conversation_history=messages,
                     )
+
+                    payment_info = {
+                        "order_id": tool_result.get("order_id"),
+                        "order_number": tool_result.get("order_number"),
+                        "total_amount": tool_result.get("total_amount"),
+                        "currency": tool_result.get("currency", "USD"),
+                        "gateway": gw,
+                        "payment_id": tool_result.get("payment_id"),
+                        "gateway_order_id": tool_result.get("gateway_order_id"),
+                        "razorpay_order_id": tool_result.get("razorpay_order_id"),
+                        "razorpay_key_id": tool_result.get("razorpay_key_id"),
+                        "status": "payment_pending",
+                    }
+
                     return {
                         "response": resp_text,
-                        "tool_calls": [{"tool": "checkout", "args": {"payment_gateway": gw}, "success": True}],
+                        "tool_calls": [{"tool": "checkout", "args": {"payment_gateway": gw}, "result": tool_result, "success": True}],
+                        "payment": payment_info,
                         "session_id": session_id,
                     }
                 except Exception as e:

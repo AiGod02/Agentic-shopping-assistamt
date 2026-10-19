@@ -263,7 +263,7 @@ async def remove_from_cart(item_id: str, user_token: str = "", session_id: str =
 # ────────────────────────────────────────────────────────────────
 
 async def checkout(
-    payment_gateway: str = "stripe",
+    payment_gateway: str = "razorpay",
     user_token: str = "",
     **kwargs,
 ) -> dict[str, Any]:
@@ -527,7 +527,7 @@ def register_all_tools() -> None:
         description="Proceed to payment and final order placement. Use this when the user is 'ready', 'done shopping', wants to 'pay', or 'finish the order'.",
         category=ToolCategory.ORDER,
         parameters=[
-            ToolParameter(name="payment_gateway", type="string", description="Payment method: stripe or razorpay", required=False, enum=["stripe", "razorpay"]),
+            ToolParameter(name="payment_gateway", type="string", description="Payment method: razorpay or stripe (default razorpay)", required=False, enum=["razorpay", "stripe"]),
         ],
         handler=checkout,
         requires_confirmation=True,

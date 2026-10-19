@@ -333,6 +333,18 @@ class PaymentService:
             },
         )
 
+        # Update linked order status to paid and saga_state to completed
+        if order_id and not str(order_id).startswith("sub-"):
+            try:
+                cand_oid = uuid.UUID(str(order_id))
+            except Exception:
+                cand_oid = order_id
+            await self.session.execute(
+                text("UPDATE orders SET status = 'paid', saga_state = 'completed', updated_at = NOW() WHERE id = :oid"),
+                {"oid": cand_oid},
+            )
+            logger.info("order_status_updated_to_paid_on_capture", order_id=str(order_id), payment_id=str(payment_id))
+
         # Activate subscription if this is a platform subscription payment
         if order_id and str(order_id).startswith("sub-"):
             sub_id = order_id[4:]

@@ -131,7 +131,7 @@ register('checkout', {
     category: 'order',
     icon: '💳',
     parameters: [
-        { name: 'payment_gateway', type: 'string', description: 'Payment method: stripe or razorpay', required: false },
+        { name: 'payment_gateway', type: 'string', description: 'Payment method: razorpay (default) or stripe', required: false },
         { name: 'pay_platform', type: 'boolean', description: 'If true, processes transaction directly through the platform account bypassing split payout', required: false },
     ],
     handler: checkout,

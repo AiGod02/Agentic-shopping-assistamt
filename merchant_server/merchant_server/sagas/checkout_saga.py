@@ -132,7 +132,7 @@ class CheckoutSaga:
         self,
         user_id: uuid.UUID,
         idempotency_key: str,
-        payment_gateway: str = "stripe",
+        payment_gateway: str = "razorpay",
         shipping_address: dict[str, Any] | None = None,
         billing_address: dict[str, Any] | None = None,
         pay_platform: bool = False,
@@ -272,6 +272,10 @@ class CheckoutSaga:
                 payment_id=ctx.payment_id,
             )
 
+            meta = payment_data.get("metadata") or {}
+            rzp_order_id = payment_data.get("gateway_order_id") or meta.get("razorpay_order_id")
+            rzp_key_id = meta.get("razorpay_key_id") or getattr(payment_settings, "razorpay_key_id", "") or "rzp_test_placeholder"
+
             return {
                 "order_id": str(order.id),
                 "order_number": order.order_number,
@@ -280,6 +284,9 @@ class CheckoutSaga:
                 "payment_id": ctx.payment_id,
                 "client_secret": payment_data.get("client_secret"),
                 "gateway": payment_gateway,
+                "gateway_order_id": rzp_order_id,
+                "razorpay_order_id": rzp_order_id,
+                "razorpay_key_id": rzp_key_id,
                 "status": "payment_pending",
             }
 
